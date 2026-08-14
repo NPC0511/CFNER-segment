@@ -1,0 +1,70 @@
+{
+  "datasets": {
+    "conll2003": {
+      "entity_types": {
+        "person": {
+          "definition": "Names of individual people.",
+          "positive_examples": [
+            "John Smith",
+            "Mary"
+          ],
+          "negative_examples": [
+            "Google",
+            "London"
+          ],
+          "confusable_with": {
+            "organisation": 1.5
+          }
+        },
+        "location": {
+          "definition": "Geographical places such as countries, cities, states, regions, rivers, and landmarks.",
+          "positive_examples": [
+            "London",
+            "Germany",
+            "New York"
+          ],
+          "negative_examples": [
+            "John Smith",
+            "Google"
+          ],
+          "confusable_with": {
+            "organisation": 1.7
+          }
+        },
+        "organisation": {
+          "definition": "Companies, agencies, institutions, teams, and other named organizations.",
+          "positive_examples": [
+            "Google",
+            "United Nations",
+            "Reuters"
+          ],
+          "negative_examples": [
+            "John Smith",
+            "London"
+          ],
+          "confusable_with": {
+            "person": 1.5,
+            "location": 1.7
+          }
+        },
+        "misc": {
+          "definition": "Named entities that do not fit person, location, or organisation, such as events, nationalities, products, and works.",
+          "positive_examples": [
+            "European",
+            "World Cup"
+          ],
+          "negative_examples": [
+            "John Smith",
+            "London",
+            "Google"
+          ],
+          "confusable_with": {
+            "person": 1.1,
+            "location": 1.1,
+            "organisation": 1.1
+          }
+        }
+      }
+    }
+  }
+}

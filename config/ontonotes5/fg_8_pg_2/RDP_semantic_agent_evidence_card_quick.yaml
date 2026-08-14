@@ -1,0 +1,14 @@
+# Isolated test: Qwen sees the full pre-training risk evidence card.
+base_cfg: RDP_semantic_agent_calibrated.yaml
+first_training_epochs: 2
+training_epochs: 2
+risk_graph_cache_dir: semantic_cache/ontonotes5_v7_evidence_card/risk_graph
+semantic_cache_dir: semantic_cache/ontonotes5_v7_evidence_card
+reflection_cache_dir: semantic_cache/ontonotes5_v7_evidence_card/reflection
+prototype_memory_cache_dir: semantic_cache/ontonotes5_v7_evidence_card/prototype_memory
+llm_verifier_cache_dir: semantic_cache/ontonotes5_v7_evidence_card/llm_verifier
+semantic_prior_max_delta: 0.0
+is_use_instance_context_risk: True
+instance_context_examples_per_type: 2
+is_collect_prototype_similarity: True
+is_use_risk_calibrator: False

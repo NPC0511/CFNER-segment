@@ -1,0 +1,22 @@
+# LLM constructs semantic candidates; historical task data calibrates edge weights.
+base_cfg: RDP_semantic_agent_calibrated.yaml
+first_training_epochs: 2
+training_epochs: 2
+risk_graph_cache_dir: semantic_cache/ontonotes5_v6_evidence_quick/risk_graph
+semantic_cache_dir: semantic_cache/ontonotes5_v6_evidence_quick
+reflection_cache_dir: semantic_cache/ontonotes5_v6_evidence_quick/reflection
+prototype_memory_cache_dir: semantic_cache/ontonotes5_v6_evidence_quick/prototype_memory
+llm_verifier_cache_dir: semantic_cache/ontonotes5_v6_evidence_quick/llm_verifier
+
+# LLM creates graph topology/candidates but cannot directly raise edge risk.
+semantic_prior_max_delta: 0.0
+is_use_instance_context_risk: True
+instance_context_examples_per_type: 2
+
+# Use the completed v5 diagnostic run only as historical calibration evidence.
+is_use_risk_calibrator: True
+risk_calibrator_history_dir: semantic_cache/ontonotes5_v5_context_quick/reflection
+risk_calibrator_min_tasks: 3
+risk_calibrator_min_edges: 30
+risk_calibrator_ridge_alpha: 1.0
+risk_calibrator_risk_scale: 3.0

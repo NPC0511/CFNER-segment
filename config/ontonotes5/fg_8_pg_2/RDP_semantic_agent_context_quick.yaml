@@ -1,0 +1,11 @@
+# Fast, clean test of the instance-conditioned LLM risk graph.
+base_cfg: RDP_semantic_agent_calibrated.yaml
+first_training_epochs: 2
+training_epochs: 2
+risk_graph_cache_dir: semantic_cache/ontonotes5_v5_context_quick/risk_graph
+semantic_cache_dir: semantic_cache/ontonotes5_v5_context_quick
+reflection_cache_dir: semantic_cache/ontonotes5_v5_context_quick/reflection
+prototype_memory_cache_dir: semantic_cache/ontonotes5_v5_context_quick/prototype_memory
+llm_verifier_cache_dir: semantic_cache/ontonotes5_v5_context_quick/llm_verifier
+is_use_instance_context_risk: True
+instance_context_examples_per_type: 2

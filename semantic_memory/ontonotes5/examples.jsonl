@@ -1,0 +1,22 @@
+{"dataset":"ontonotes5","entity_type":"CARDINAL","text":"The team scored three goals.","span":"three","label":"CARDINAL","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"DATE","text":"Rome, September 1st, by reporters.","span":"September 1st","label":"DATE","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"EVENT","text":"The World Swimming Championship opened today.","span":"World Swimming Championship","label":"EVENT","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"FAC","text":"Flights departed from Heathrow Airport.","span":"Heathrow Airport","label":"FAC","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"GPE","text":"The delegation arrived in Rome.","span":"Rome","label":"GPE","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"LANGUAGE","text":"She speaks Mandarin Chinese.","span":"Mandarin Chinese","label":"LANGUAGE","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"LAW","text":"Congress passed the Clean Air Act.","span":"Clean Air Act","label":"LAW","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"LOC","text":"The ship crossed the Pacific Ocean.","span":"Pacific Ocean","label":"LOC","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"MONEY","text":"The contract was worth $5 million.","span":"$5 million","label":"MONEY","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"NORP","text":"Chinese competitors won the event.","span":"Chinese","label":"NORP","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"ORDINAL","text":"She finished in Seventh place.","span":"Seventh","label":"ORDINAL","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"ORG","text":"Xinhua News Agency reported the result.","span":"Xinhua News Agency","label":"ORG","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"PERCENT","text":"Sales increased by 15 percent.","span":"15 percent","label":"PERCENT","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"PERSON","text":"Aiguo Yang spoke to the press.","span":"Aiguo Yang","label":"PERSON","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"PRODUCT","text":"The company released a new iPhone.","span":"iPhone","label":"PRODUCT","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"QUANTITY","text":"The platform was 1-meter high.","span":"1-meter","label":"QUANTITY","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"TIME","text":"The finals were held this morning.","span":"this morning","label":"TIME","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"WORK_OF_ART","text":"She reread The Great Gatsby.","span":"The Great Gatsby","label":"WORK_OF_ART","example_type":"positive"}
+{"dataset":"ontonotes5","entity_type":"GPE","text":"Rome signed the agreement.","span":"Rome","label":"ORG","example_type":"confusion"}
+{"dataset":"ontonotes5","entity_type":"ORG","text":"London defeated Manchester in the final.","span":"London","label":"ORG","example_type":"confusion"}
+{"dataset":"ontonotes5","entity_type":"NORP","text":"China won the match.","span":"China","label":"GPE","example_type":"negative"}
+{"dataset":"ontonotes5","entity_type":"MONEY","text":"The rate reached 15 percent.","span":"15 percent","label":"PERCENT","example_type":"negative"}
