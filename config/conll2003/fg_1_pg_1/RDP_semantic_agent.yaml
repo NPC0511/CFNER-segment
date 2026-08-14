@@ -66,11 +66,11 @@ reflection_risk_threshold: 0.5
 reflection_forgetting_threshold: 1.0
 rule_risk_weight: 0.6
 llm_risk_weight: 0.4
-reflection_update_weight: 0.3
+reflection_update_weight: 0.0
 reflection_forgetting_weight: 0.6
 reflection_confusion_weight: 0.4
 reflection_forgetting_scale: 5.0
-is_use_old_class_vulnerability: True
+is_use_old_class_vulnerability: False
 old_class_vulnerability_f1_floor: 80.0
 old_class_vulnerability_weight: 0.3
 is_save_risk_analysis: True
