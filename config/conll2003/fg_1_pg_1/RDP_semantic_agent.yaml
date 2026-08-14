@@ -54,7 +54,6 @@ model_confusion_risk_scale: 2.0
 is_use_risk_aware_pseudo_label: True
 pseudo_label_min_confidence: 0.55
 pseudo_label_max_confidence: 0.80
-risk_pseudo_label_fallback_confidence: 0.45
 is_use_risk_contrastive: True
 risk_contrastive_weight: 0.1
 risk_contrastive_margin: 0.2
@@ -86,12 +85,11 @@ local_llm_temperature: 0.0
 local_llm_torch_dtype: float32
 
 ### stage 3 llm verifier
-is_use_llm_verifier: True
+is_use_llm_verifier: False
 llm_verifier_model_path: /root/autodl-tmp/models/Qwen2.5-1.5B-Instruct
 llm_verifier_cache_dir: semantic_cache/llm_verifier
 llm_verifier_max_new_tokens: 256
 llm_verifier_temperature: 0.0
 llm_verifier_torch_dtype: float32
-llm_verifier_max_checks_per_batch: 1
-llm_verifier_task_budget: 20
-llm_verifier_min_risk: 0.65
+llm_verifier_max_checks_per_batch: 2
+llm_verifier_confidence_threshold: 0.75
