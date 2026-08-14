@@ -246,11 +246,7 @@ def main_cl(params):
         logger.info("All seen entity types = %s"%str(all_seen_entity_list))
         logger.info("New entity types = %s"%str(new_entity_list))
         model_confusion_pairs = []
-        prototype_similarity_pairs = []
-        instance_context_examples = {}
-        if iteration > 0 and params.is_use_semantic_agent and (
-                params.is_use_model_risk or params.is_collect_prototype_similarity or
-                params.is_use_instance_context_risk):
+        if iteration > 0 and params.is_use_semantic_agent and params.is_use_model_risk:
             risk_dataloader = ner_dataloader.get_dataloader(
                 first_N_classes=len(all_seen_entity_list),
                 select_entity_list=[],
@@ -264,31 +260,13 @@ def main_cl(params):
                     old_entity_list=all_seen_entity_list[:-len(new_entity_list)]
                 )
                 logger.info("Teacher new-to-old confusion evidence = %s" % str(model_confusion_pairs))
-            if params.is_collect_prototype_similarity:
-                prototype_similarity_pairs = trainer.get_new_to_old_prototype_similarity_pairs(
-                    dataloader=risk_dataloader,
-                    new_entity_list=new_entity_list,
-                    old_entity_list=all_seen_entity_list[:-len(new_entity_list)]
-                )
-                logger.info("Prototype similarity evidence = %s" % str(prototype_similarity_pairs))
-            if params.is_use_instance_context_risk:
-                instance_context_examples = trainer.get_entity_context_examples(
-                    dataloader=risk_dataloader,
-                    entity_list=all_seen_entity_list,
-                    max_examples_per_type=params.instance_context_examples_per_type
-                )
-                logger.info("Instance context evidence counts = %s" % str(
-                    {entity_type: len(items) for entity_type, items in instance_context_examples.items()}
-                ))
         semantic_plan = semantic_agent.build_plan(
             domain_name=domain_name,
             new_entity_list=new_entity_list,
             all_seen_entity_list=all_seen_entity_list,
             schema=params.schema,
             iteration=iteration,
-            model_confusion_pairs=model_confusion_pairs,
-            prototype_similarity_pairs=prototype_similarity_pairs,
-            instance_context_examples=instance_context_examples
+            model_confusion_pairs=model_confusion_pairs
         )
         llm_raw_output_path = semantic_agent.save_llm_raw_output(
             raw_output=semantic_plan.get("llm_raw_output", ""),

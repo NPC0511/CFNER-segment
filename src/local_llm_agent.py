@@ -355,40 +355,23 @@ class LocalLLMAgent(object):
     def _build_pairwise_risk_prompt(self, source_new, candidate_a, candidate_b, retrieved_evidence):
         definitions = retrieved_evidence.get("definitions", {})
         rules = retrieved_evidence.get("annotation_rules", {})
-        contexts = retrieved_evidence.get("instance_context_examples", {})
-        cards = retrieved_evidence.get("risk_evidence_cards", {})
         payload = {
             "task": "Choose the old entity type more likely to be confused with the new NER type in this dataset.",
             "source_new": source_new,
             "source_definition": definitions.get(source_new, ""),
-            "source_labelled_contexts": self._context_examples_for_type(contexts, source_new),
             "candidate_A": {
                 "type": candidate_a,
                 "definition": definitions.get(candidate_a, ""),
-                "rules": rules.get(candidate_a, []),
-                "labelled_contexts": self._context_examples_for_type(contexts, candidate_a),
-                "pre_training_evidence": cards.get("%s->%s" % (source_new, candidate_a), {})
+                "rules": rules.get(candidate_a, [])
             },
             "candidate_B": {
                 "type": candidate_b,
                 "definition": definitions.get(candidate_b, ""),
-                "rules": rules.get(candidate_b, []),
-                "labelled_contexts": self._context_examples_for_type(contexts, candidate_b),
-                "pre_training_evidence": cards.get("%s->%s" % (source_new, candidate_b), {})
+                "rules": rules.get(candidate_b, [])
             },
-            "instruction": "Use all pre-training evidence: teacher behaviour, contextual prototype similarity, old-class history, labelled contexts, and annotation boundaries. Do not infer post-training outcomes. Answer A if candidate_A is more likely to be confused with source_new; answer B otherwise. Answer exactly one letter."
+            "instruction": "Use entity definitions and annotation boundaries. Answer A if candidate_A is more likely to be confused with source_new; answer B otherwise. Answer exactly one letter."
         }
         return json.dumps(payload, ensure_ascii=True, indent=2)
-
-    @staticmethod
-    def _context_examples_for_type(contexts, entity_type, max_examples=2, max_chars=280):
-        compact = []
-        for item in contexts.get(entity_type, [])[:max_examples]:
-            compact.append({
-                "span": str(item.get("span", ""))[:80],
-                "context": str(item.get("context", ""))[:max_chars]
-            })
-        return compact
 
     @staticmethod
     def _single_token_id(tokenizer, text):

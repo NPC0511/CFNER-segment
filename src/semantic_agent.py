@@ -84,12 +84,9 @@ class SemanticAgent(object):
             return json.load(f)
 
     def build_plan(self, domain_name, new_entity_list, all_seen_entity_list, schema="BIO", iteration=None,
-                   model_confusion_pairs=None, prototype_similarity_pairs=None,
-                   instance_context_examples=None):
+                   model_confusion_pairs=None):
         old_entity_list = [e for e in all_seen_entity_list if e not in new_entity_list]
         model_confusion_pairs = list(model_confusion_pairs or [])
-        prototype_similarity_pairs = list(prototype_similarity_pairs or [])
-        instance_context_examples = dict(instance_context_examples or {})
         plan = {
             "enabled": False,
             "domain_name": domain_name,
@@ -113,8 +110,6 @@ class SemanticAgent(object):
             },
             "retrieved_evidence": {},
             "model_confusion_pairs": model_confusion_pairs,
-            "prototype_similarity_pairs": prototype_similarity_pairs,
-            "instance_context_examples": instance_context_examples,
             "plan_source": "disabled",
             "llm_raw_output": "",
             "llm_error": ""
@@ -127,16 +122,6 @@ class SemanticAgent(object):
             new_entity_list=new_entity_list,
             old_entity_list=old_entity_list
         )
-        if instance_context_examples:
-            retrieved_evidence["instance_context_examples"] = instance_context_examples
-        retrieved_evidence["risk_evidence_cards"] = self._build_risk_evidence_cards(
-            domain_name=domain_name,
-            new_entity_list=new_entity_list,
-            old_entity_list=old_entity_list,
-            model_confusion_pairs=model_confusion_pairs,
-            prototype_similarity_pairs=prototype_similarity_pairs,
-            current_iteration=iteration
-        )
         rule_plan = self._build_rule_plan(
             plan=plan,
             retrieved_evidence=retrieved_evidence,
@@ -144,8 +129,7 @@ class SemanticAgent(object):
             schema=schema,
             plan_source="rule_rag",
             iteration=iteration,
-            model_confusion_pairs=model_confusion_pairs,
-            prototype_similarity_pairs=prototype_similarity_pairs
+            model_confusion_pairs=model_confusion_pairs
         )
         if not self.use_local_llm:
             return rule_plan
@@ -186,8 +170,7 @@ class SemanticAgent(object):
                     old_entity_list=old_entity_list,
                     schema=schema,
                     iteration=iteration,
-                    model_confusion_pairs=model_confusion_pairs,
-                    prototype_similarity_pairs=prototype_similarity_pairs
+                    model_confusion_pairs=model_confusion_pairs
                 )
                 self._save_cached_plan(
                     llm_plan,
@@ -226,20 +209,18 @@ class SemanticAgent(object):
         return rule_plan
 
     def _build_rule_plan(self, plan, retrieved_evidence, old_entity_list, schema, plan_source, iteration,
-                         model_confusion_pairs, prototype_similarity_pairs):
+                         model_confusion_pairs):
         risk_edges = self._build_rule_risk_edges(
             retrieved_evidence=retrieved_evidence,
             new_entity_list=plan["new_entity_list"],
             old_entity_list=old_entity_list
         )
-        risk_edges = self._attach_prototype_similarity(risk_edges, prototype_similarity_pairs)
         risk_edges = self._apply_reflection_updates(
             risk_edges=risk_edges,
             domain_name=plan["domain_name"],
             current_iteration=iteration
         )
         risk_edges = self._apply_model_confusion_updates(risk_edges, model_confusion_pairs)
-        risk_edges, calibration = self._apply_risk_calibration(risk_edges, plan["domain_name"], iteration)
         important_old_types = self._risk_edges_to_type_weights(risk_edges)
 
         old_label_weights = {}
@@ -261,7 +242,6 @@ class SemanticAgent(object):
             "old_type_vulnerability": old_type_vulnerability,
             "plan_source": plan_source
         }
-        training_policy["risk_calibration"] = calibration
         risk_graph = self._build_risk_graph(
             domain_name=plan["domain_name"],
             new_entity_list=plan["new_entity_list"],
@@ -284,8 +264,7 @@ class SemanticAgent(object):
         return plan
 
     def _build_llm_plan(self, base_plan, retrieved_evidence, llm_output, raw_output,
-                        old_entity_list, schema, iteration, model_confusion_pairs,
-                        prototype_similarity_pairs):
+                        old_entity_list, schema, iteration, model_confusion_pairs):
         llm_edges = list(llm_output.get("risk_edges", []))
         expected_pairs = {
             (new_entity, old_entity)
@@ -300,8 +279,7 @@ class SemanticAgent(object):
         llm_by_pair = {(edge.get("source"), edge.get("target")): edge for edge in llm_edges}
         rule_by_pair = {(edge.get("source"), edge.get("target")): edge for edge in rule_edges}
         missing_pairs = expected_pairs - set(llm_by_pair)
-        calibration = self._get_llm_calibration(base_plan["domain_name"], iteration)
-        risk_edges = self._merge_rule_and_llm_risks(rule_edges, llm_edges, calibration)
+        risk_edges = self._merge_rule_and_llm_risks(rule_edges, llm_edges)
         for pair in sorted(missing_pairs):
             rule_edge = dict(rule_by_pair[pair])
             rule_edge["initial_risk"] = float(rule_edge["risk"])
@@ -310,14 +288,12 @@ class SemanticAgent(object):
             rule_edge["reason"] = "%s LLM batch fallback." % rule_edge.get("reason", "")
             risk_edges.append(rule_edge)
         risk_edges.sort(key=lambda edge: (edge["source"], edge["target"]))
-        risk_edges = self._attach_prototype_similarity(risk_edges, prototype_similarity_pairs)
         risk_edges = self._apply_reflection_updates(
             risk_edges=risk_edges,
             domain_name=base_plan["domain_name"],
             current_iteration=iteration
         )
         risk_edges = self._apply_model_confusion_updates(risk_edges, model_confusion_pairs)
-        risk_edges, calibration = self._apply_risk_calibration(risk_edges, base_plan["domain_name"], iteration)
         old_type_weights = self._risk_edges_to_type_weights(risk_edges)
         important_old_types = sorted(old_type_weights.keys())
 
@@ -340,8 +316,6 @@ class SemanticAgent(object):
             "old_type_vulnerability": old_type_vulnerability,
             "plan_source": "local_llm" if not missing_pairs else "local_llm_partial"
         }
-        training_policy["risk_calibration"] = calibration
-
         plan = dict(base_plan)
         plan["enabled"] = len(old_label_weights) > 0
         plan["important_old_types"] = important_old_types
