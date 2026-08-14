@@ -64,8 +64,8 @@ is_use_reflection_memory: True
 reflection_cache_dir: semantic_cache/reflection
 reflection_risk_threshold: 0.5
 reflection_forgetting_threshold: 1.0
-rule_risk_weight: 0.6
-llm_risk_weight: 0.4
+rule_risk_weight: 0.8
+llm_risk_weight: 0.2
 reflection_update_weight: 0.0
 reflection_forgetting_weight: 0.6
 reflection_confusion_weight: 0.4

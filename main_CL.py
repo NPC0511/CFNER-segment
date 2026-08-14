@@ -1,8 +1,6 @@
 import torch
 import numpy as np
-from tqdm import tqdm
 import random
-import scipy
 from copy import deepcopy
 
 from src.utils import *
@@ -17,8 +15,6 @@ from src.reflection_memory import ReflectionMemory
 from src.risk_analysis import RiskForgettingAnalyzer
 from src.result_summary import ContinualResultSummary
 from src.semantic_agent import SemanticAgent
-
-import time
 
 
 def get_checkpoint_selection_score(params, new_micro_f1, cumulative_macro_f1):
@@ -664,10 +660,16 @@ def main_cl(params):
                                                   
         logger.info("Accumulation: Test_f1=%.3f, Test_ma_f1=%.3f, Test_f1_each_class=%s"%(
                     f1_test_cumul, ma_f1_test_cumul, str(f1_test_each_class_cumul)))
-        if iteration == 0 and params.is_use_prototype_anchor:
-            trainer.prototypes, trainer.count_features = trainer.build_prototypes_from_labels(
+        if params.is_use_prototype_anchor:
+            new_label_indices = [
+                label_index
+                for label_index, label_name in enumerate(label_list)
+                if any(label_name.endswith("-" + entity_name) for entity_name in new_entity_list)
+            ]
+            trainer.prototypes, trainer.count_features = trainer.refresh_prototypes_from_labels(
                 train_loader=dataloader_train,
-                num_classes=trainer.nb_current_classes
+                num_classes=trainer.nb_current_classes,
+                label_indices_to_refresh=new_label_indices
             )
             prototype_path = prototype_memory.save(
                 task_id=iteration,
@@ -677,7 +679,7 @@ def main_cl(params):
                 prototype_vectors=trainer.prototypes,
                 feature_counts=trainer.count_features
             )
-            logger.info("Saved first-task ground-truth prototypes to %s" % prototype_path)
+            logger.info("Saved refreshed gold prototypes to %s" % prototype_path)
         result_summary.add_task_result(
             task_id=iteration,
             new_entity_list=new_entity_list,

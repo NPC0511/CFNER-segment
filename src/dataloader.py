@@ -3,10 +3,8 @@ import torch
 import torch.nn as nn
 import os
 import numpy as np
-import random
 import logging
 import pickle
-from tqdm import tqdm
 from transformers import AutoTokenizer
 from torch.utils.data import DataLoader
 from copy import deepcopy
@@ -49,12 +47,10 @@ def convert_BIOES_to_BIO(in_datapath, out_datapath):
         with open(in_datapath, "r", encoding="utf-8") as f_in:
             for i, line in enumerate(f_in):
                 line = line.strip()
-                splits = line.split()
                 if line=='':
                     f_out.write('\n')
                     continue
                 else:
-                    label = splits[1]
                     if 'E-' in line:
                         line = line.replace('E-','I-')
                     elif 'S-' in line:
@@ -596,14 +592,3 @@ class NER_dataloader():
             return_result.append(dataloader_test)
         
         return tuple(return_result)
-
-if __name__ == "__main__":
-    # import pdb 
-    # pdb.set_trace()
-    spilt_dataset(['datasets/NER_data/i2b2'], 'train', domain2entity['i2b2'], 8, 2, 'BIO')
-    # spilt_dataset_random(['datasets/NER_data/conll2003'], 'train', domain2entity['conll2003'], 1, 1, 'BIO')
-    # print_split_data_statistic(['datasets/NER_data/conll2003'], 'train', domain2entity['conll2003'], 1, 1, 'BIO')
-    # get_entity_list('datasets/NER_data/i2b2/train.txt')
-    # convert_BIOES_to_BIO('datasets/NER_data/ontonotes5/train.txt','datasets/NER_data/ontonotes5/train_.txt')
-    # convert_BIOES_to_BIO('datasets/NER_data/ontonotes5/test.txt','datasets/NER_data/ontonotes5/test_.txt')
-    # convert_BIOES_to_BIO('datasets/NER_data/ontonotes5/dev.txt','datasets/NER_data/ontonotes5/dev_.txt')

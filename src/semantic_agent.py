@@ -20,7 +20,7 @@ class SemanticAgent(object):
                  pseudo_label_min_confidence=0.55,
                  pseudo_label_max_confidence=0.80,
                  reflection_cache_dir="semantic_cache/reflection",
-                 rule_risk_weight=0.6, llm_risk_weight=0.4,
+                 rule_risk_weight=0.8, llm_risk_weight=0.2,
                  reflection_update_weight=0.3,
                  reflection_forgetting_weight=0.6,
                  reflection_confusion_weight=0.4,

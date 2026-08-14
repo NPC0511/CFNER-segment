@@ -179,9 +179,9 @@ def get_params():
                         help="Risk at or above which an edge is predicted high risk")
     parser.add_argument("--reflection_forgetting_threshold", type=float, default=1.0,
                         help="Old-class F1 drop at or above which forgetting is high")
-    parser.add_argument("--rule_risk_weight", type=float, default=0.6,
+    parser.add_argument("--rule_risk_weight", type=float, default=0.8,
                         help="Weight of rule risk in the initial hybrid risk")
-    parser.add_argument("--llm_risk_weight", type=float, default=0.4,
+    parser.add_argument("--llm_risk_weight", type=float, default=0.2,
                         help="Weight of local LLM risk in the initial hybrid risk")
     parser.add_argument("--llm_risk_min_weight", type=float, default=0.05,
                         help="Lower bound for calibrated local-LLM risk weight")

@@ -3,17 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import logging
-import random
-import scipy
 import numpy as np
-import math
-from tqdm import tqdm
 from copy import deepcopy
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-from torch.nn.parameter import Parameter
-from sklearn.metrics import confusion_matrix
 from seqeval.metrics import f1_score # 序列标注评估工具
 from transformers import AutoTokenizer
 
@@ -293,25 +284,22 @@ class BaseTrainer(object):
 
 
     def _update_running_stats(self, labels_down, features, prototypes, count_features):
-        cl_present = torch.unique(input=labels_down)
-   
-        cl_present=torch.where((cl_present < self.old_classes) & (cl_present != pad_token_label_id), cl_present, pad_token_label_id)
-        cl_present = torch.unique(input=cl_present)
-      
-        if cl_present[0] == pad_token_label_id:
-            cl_present = cl_present[1:]
+        label_ids = labels_down.squeeze(-1)
+        cl_present = torch.unique(label_ids)
+        cl_present = cl_present[
+            (cl_present < self.old_classes) & (cl_present != pad_token_label_id)
+        ]
 
-        features_local_mean = torch.zeros([self.old_classes, self.params.hidden_dim]).cuda()
-
-        for cl in cl_present:
-            features_cl = features[(labels_down == cl).expand(-1, -1, features.shape[-1])].view(features.shape[-1], -1).detach()
-            features_local_mean[cl] = torch.mean(features_cl.detach(), dim=-1)
-            features_cl_sum = torch.sum(features_cl.detach(), dim=-1)
-            features_running_mean_tot_cl = (features_cl_sum + count_features.detach()[cl] *
-                                            prototypes.detach()[cl]) \
-                                           / (count_features.detach()[cl] + features_cl.shape[-1])
-            count_features[cl] += features_cl.shape[-1]
-            prototypes[cl] = features_running_mean_tot_cl
+        for cl in cl_present.tolist():
+            selected_features = features[label_ids == cl].detach()
+            if selected_features.numel() == 0:
+                continue
+            feature_count = selected_features.shape[0]
+            previous_count = count_features[cl]
+            prototypes[cl] = (
+                selected_features.sum(dim=0) + previous_count * prototypes[cl]
+            ) / (previous_count + feature_count)
+            count_features[cl] += feature_count
 
         return prototypes, count_features
 
@@ -362,7 +350,7 @@ class BaseTrainer(object):
                 train_loader)
 
     def build_prototypes_from_labels(self, train_loader, num_classes):
-        """Build first-task prototypes from gold labels before old labels disappear."""
+        """Build class prototypes from the task's gold token labels."""
         prototypes = torch.zeros([num_classes, self.params.hidden_dim], device="cuda")
         count_features = torch.zeros([num_classes], dtype=torch.long, device="cuda")
         was_training = self.model.training
@@ -381,6 +369,31 @@ class BaseTrainer(object):
         prototypes[nonzero] = prototypes[nonzero] / count_features[nonzero].unsqueeze(1)
         if was_training:
             self.model.train()
+        return prototypes, count_features
+
+    def refresh_prototypes_from_labels(self, train_loader, num_classes, label_indices_to_refresh):
+        """Refresh newly learned labels from gold data while preserving old snapshots."""
+        gold_prototypes, gold_counts = self.build_prototypes_from_labels(
+            train_loader=train_loader,
+            num_classes=num_classes
+        )
+        if not hasattr(self, "prototypes") or self.prototypes is None:
+            return gold_prototypes, gold_counts
+
+        prototypes = gold_prototypes.new_zeros((num_classes, self.params.hidden_dim))
+        count_features = gold_counts.new_zeros(num_classes)
+        existing_count = min(self.prototypes.shape[0], num_classes)
+        if existing_count:
+            prototypes[:existing_count] = self.prototypes[:existing_count]
+            count_features[:existing_count] = self.count_features[:existing_count]
+
+        for label_index in label_indices_to_refresh:
+            if label_index < 0 or label_index >= num_classes:
+                continue
+            if gold_counts[label_index] <= 0:
+                continue
+            prototypes[label_index] = gold_prototypes[label_index]
+            count_features[label_index] = gold_counts[label_index]
         return prototypes, count_features
 
     def restore_prototypes(self, payload):

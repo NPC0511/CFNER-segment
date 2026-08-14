@@ -1,5 +1,4 @@
 import math
-import numpy as np
 import torch
 import torch.nn as nn
 import logging
@@ -7,9 +6,6 @@ from torch.nn import functional as F
 from torch.nn.parameter import Parameter
 from transformers import AutoConfig
 from transformers import AutoModelWithLMHead
-
-from src.utils import *
-from src.dataloader import *
 
 logger = logging.getLogger()
 
@@ -121,4 +117,3 @@ class SplitCosineLinear(nn.Module):
         if self.sigma is not None:
             out = self.sigma * out
         return out
-

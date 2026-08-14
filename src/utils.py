@@ -1,13 +1,11 @@
 
 import os
 import subprocess
-import pickle
 import logging
 import time
 import random
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import torch.nn.functional as F
 from transformers import AutoTokenizer
 import pandas as pd
@@ -17,8 +15,6 @@ import matplotlib.pyplot as plt
 import scipy
 from datetime import timedelta
 from sklearn.manifold import TSNE
-from tqdm import tqdm
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
 import math
 
@@ -574,7 +570,7 @@ def assert_no_old_samples(labels, ref_dims, all_dims, pad_token_label_id):
     no_pad_nonzero_mask = torch.logical_and(labels!=pad_token_label_id, labels!=0)
     if no_pad_nonzero_mask.any():
         assert labels[no_pad_nonzero_mask].max()<all_dims and \
-            labels[no_pad_nonzero_mask].min()>=refer_dims, \
+            labels[no_pad_nonzero_mask].min()>=ref_dims, \
             "the training data contains old classes!!!"
 
 def init_experiment(params, logger_filename):
