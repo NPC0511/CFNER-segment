@@ -15,11 +15,13 @@ is_load_disjoin_train: True
 batch_size: 8
 max_seq_length: 512
 
-lr: 2e-3  # last lr is 4e-4
-stable_lr: 4e-4
+lr: 2e-3  # 第一个任务初始学习率
+stable_lr: 1.5e-3  # 后续任务学习率（从4e-4提高到1.5e-3）
 
-schedule: (5,)
-gamma: 0.2
+schedule: (5,)  # 第一个任务在epoch 5衰减
+gamma: 0.2  # 衰减率
+stable_schedule: (10, 20)  # 后续任务在epoch 10和20衰减
+stable_gamma: 0.5  # 后续任务的衰减率
 
 first_training_epochs: 20
 training_epochs: 30
@@ -33,7 +35,7 @@ nb_class_pg: 1
 nb_class_fg: 1
 
 is_rescale_new_weight: True
-is_fix_trained_classifier: True
+is_fix_trained_classifier: False  # 不冻结旧分类器，允许适应新特征空间
 is_unfix_O_classifier: False
 
 ### baseline model
@@ -41,7 +43,7 @@ is_unfix_O_classifier: False
 soft_param: 0.3
 regular_param: 0.1
 
-distill_logits_weight: 1.5  # 降低蒸馏权重，给风险约束更多空间
+distill_logits_weight: 2.0  # 恢复蒸馏权重（解冻后蒸馏才有效）
 
 ### semantic agent
 is_use_semantic_agent: True
@@ -82,6 +84,8 @@ old_class_vulnerability_weight: 0.3
 is_save_risk_analysis: True
 is_use_prototype_anchor: True
 prototype_anchor_weight: 0.8  # ← 提高原型锚定权重
+is_use_prototype_feature_anchor: True  # 新增：特征层面的原型锚定（梯度到encoder）
+prototype_feature_anchor_weight: 0.4  # 新增：特征锚定权重，防止特征空间漂移
 prototype_memory_cache_dir: semantic_cache/prototype_memory
 is_use_local_llm_agent: True
 local_llm_model_path: /root/autodl-tmp/models/Qwen2.5-1.5B-Instruct

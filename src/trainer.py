@@ -31,6 +31,7 @@ class BaseTrainer(object):
             cache_dir=getattr(params, "prototype_memory_cache_dir", "semantic_cache/prototype_memory")
         )
         self.last_prototype_anchor_loss = 0.0
+        self.last_prototype_feature_anchor_loss = 0.0  # 新增
         self.last_risk_filtered_pseudo_labels = 0
         self.last_risk_retained_pseudo_labels = 0
         self.last_risk_contrastive_loss = 0.0
@@ -445,6 +446,50 @@ class BaseTrainer(object):
         )
         return (per_proto_loss * anchor_weights).mean()
 
+    def prototype_feature_anchor_loss(self, refer_dims, original_labels):
+        """Anchor old-class token features to old prototypes (gradient to encoder)."""
+        if not getattr(self.params, "is_use_prototype_feature_anchor", False):
+            return torch.tensor(0., requires_grad=True).cuda()
+        if not hasattr(self, "prototypes") or self.prototypes is None:
+            return torch.tensor(0., requires_grad=True).cuda()
+        if self.prototypes.numel() == 0:
+            return torch.tensor(0., requires_grad=True).cuda()
+
+        # Get anchor weights for high-risk old classes
+        anchor_weights = self.get_prototype_anchor_weights(
+            refer_dims=refer_dims,
+            device=self.features.device
+        )
+
+        loss_per_class = []
+        for label_idx in range(refer_dims):
+            # Only anchor high-risk old classes (weight > 1.0)
+            if anchor_weights[label_idx] <= 1.0:
+                continue
+
+            # Find tokens in batch belonging to this old class
+            mask = (original_labels == label_idx)
+            if mask.sum() < 1:
+                continue
+
+            # Get features of old-class tokens
+            old_features = self.features[mask]  # (N, hidden_dim)
+            old_prototype = self.prototypes[label_idx].detach()  # (hidden_dim,)
+
+            # Pull old-class features towards their prototype (L2 distance)
+            distance = torch.norm(old_features - old_prototype.unsqueeze(0), dim=-1)
+
+            # Weight by risk level (higher risk = stronger anchor)
+            risk_weight = anchor_weights[label_idx] - 1.0  # Only the excess over 1.0
+            weighted_distance = distance * risk_weight
+
+            loss_per_class.append(weighted_distance.mean())
+
+        if not loss_per_class:
+            return torch.tensor(0., requires_grad=True).cuda()
+
+        return torch.stack(loss_per_class).mean()
+
     def risk_contrastive_loss(self, original_labels):
         """Separate current new-type features from high-risk old prototypes."""
         if not getattr(self.params, "is_use_risk_contrastive", False):
@@ -641,6 +686,14 @@ class BaseTrainer(object):
 
         prototype_anchor_loss = self.prototype_anchor_loss(refer_dims=refer_dims)
         self.last_prototype_anchor_loss = float(prototype_anchor_loss.detach().cpu().item())
+
+        # New: Feature-level anchor loss (gradient to encoder)
+        prototype_feature_anchor_loss = self.prototype_feature_anchor_loss(
+            refer_dims=refer_dims,
+            original_labels=original_labels
+        )
+        self.last_prototype_feature_anchor_loss = float(prototype_feature_anchor_loss.detach().cpu().item())
+
         contrastive_loss = self.risk_contrastive_loss(original_labels=original_labels)
         self.last_risk_contrastive_loss = float(contrastive_loss.detach().cpu().item())
         feature_alignment_loss = self.risk_feature_alignment_loss(
@@ -651,10 +704,14 @@ class BaseTrainer(object):
         )
         self.last_risk_feature_alignment_loss = float(feature_alignment_loss.detach().cpu().item())
 
+        # Get feature anchor weight from config
+        feature_anchor_weight = getattr(self.params, 'prototype_feature_anchor_weight', 0.0)
+
         distill_loss = self.params.soft_param * loss_soft_label + \
                         self.params.regular_param * Regularizer_soft + \
                         self.params.distill_logits_weight * distill_logits_loss + \
                         self.params.prototype_anchor_weight * prototype_anchor_loss + \
+                        feature_anchor_weight * prototype_feature_anchor_loss + \
                         self.params.risk_contrastive_weight * contrastive_loss + \
                         self.params.risk_feature_alignment_weight * feature_alignment_loss
 

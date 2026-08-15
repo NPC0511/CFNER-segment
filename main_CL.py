@@ -353,7 +353,7 @@ def main_cl(params):
                                 trainer.model.parameters())
                     tg_params =[{'params': base_params, 'lr': float(params.stable_lr),
                                 'weight_decay': float(params.weight_decay)}, \
-                                {'params': trainer.model.classifier.fc1.parameters(), 'lr': 0., 
+                                {'params': trainer.model.classifier.fc1.parameters(), 'lr': 0.,
                                 'weight_decay': 0.}]
                 else:
                     ignored_params = list(map(id, trainer.model.classifier.fc1.parameters())) + \
@@ -362,18 +362,26 @@ def main_cl(params):
                                 trainer.model.parameters())
                     tg_params =[{'params': base_params, 'lr': float(params.stable_lr),
                                 'weight_decay': float(params.weight_decay)}, \
-                                {'params': trainer.model.classifier.fc0.parameters(), 'lr': 0., 
+                                {'params': trainer.model.classifier.fc0.parameters(), 'lr': 0.,
                                 'weight_decay': 0.}, \
-                                {'params': trainer.model.classifier.fc1.parameters(), 'lr': 0., 
+                                {'params': trainer.model.classifier.fc1.parameters(), 'lr': 0.,
                                 'weight_decay': 0.}]
             else:
-                tg_params = [{'params': trainer.model.parameters(), 'lr': float(params.stable_lr), 
+                tg_params = [{'params': trainer.model.parameters(), 'lr': float(params.stable_lr),
                             'weight_decay': float(params.weight_decay)}]
-            trainer.optimizer = torch.optim.SGD(tg_params, 
+            trainer.optimizer = torch.optim.SGD(tg_params,
                                                 momentum=params.mu)
-            # last_epoch_or_step = last_global_step if params.is_train_by_steps \
-            #                                     else last_global_epoch
-            trainer.scheduler = None
+            # Add scheduler for subsequent tasks
+            stable_schedule = getattr(params, 'stable_schedule', None)
+            stable_gamma = getattr(params, 'stable_gamma', 0.5)
+            if stable_schedule is not None:
+                trainer.scheduler = torch.optim.lr_scheduler.MultiStepLR(
+                    trainer.optimizer,
+                    milestones=eval(stable_schedule) if isinstance(stable_schedule, str) else stable_schedule,
+                    gamma=stable_gamma
+                )
+            else:
+                trainer.scheduler = None
 
         # Scaling the weights in the new classifier(imprint)
         if iteration>0 and params.is_rescale_new_weight and (not params.is_from_scratch):   # True
@@ -572,9 +580,10 @@ def main_cl(params):
 
             # Print training information
             if params.info_per_epochs>0 and e%params.info_per_epochs==0: # params.info_per_epochs=1    每隔一个epoch 输出信息s
-                logger.info("Epoch %d, Step %d: Total_loss=%.3f, CE_loss=%.3f, Distill_loss=%.3f, Prototype_anchor_loss=%.3f, Risk_contrastive_loss=%.3f, Risk_feature_alignment_loss=%.3f, Risk_filtered_pseudo_labels=%d, Risk_retained_pseudo_labels=%d, Training_exact_match=%.2f%%"%(
+                logger.info("Epoch %d, Step %d: Total_loss=%.3f, CE_loss=%.3f, Distill_loss=%.3f, Prototype_anchor_loss=%.3f, Prototype_feature_anchor_loss=%.3f, Risk_contrastive_loss=%.3f, Risk_feature_alignment_loss=%.3f, Risk_filtered_pseudo_labels=%d, Risk_retained_pseudo_labels=%d, Training_exact_match=%.2f%%"%(
                             e, step, mean_loss, \
                             mean_ce_loss, mean_distill_loss, trainer.last_prototype_anchor_loss,
+                            trainer.last_prototype_feature_anchor_loss,
                             trainer.last_risk_contrastive_loss, trainer.last_risk_feature_alignment_loss,
                             trainer.last_risk_filtered_pseudo_labels,
                             trainer.last_risk_retained_pseudo_labels,
