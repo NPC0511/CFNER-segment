@@ -340,10 +340,29 @@ class BaseTrainer(object):
         return weight
 
     def feat_prototype_distance(self, feat):
-        bs, seq_len, _ = feat.shape
-        feat_proto_distance = -torch.ones((bs, seq_len, self.old_classes)).to(feat.device)
+        """
+        计算特征到原型的距离
+        修复：使用cosine距离，与分类器保持一致
+
+        原来使用L2距离，但分类器使用cosine相似度，导致度量不一致
+        """
+        bs, seq_len, hidden_dim = feat.shape
+
+        # 归一化特征和原型（与分类器一致）
+        feat_norm = F.normalize(feat, p=2, dim=-1)  # (bs, seq_len, hidden_dim)
+
+        feat_proto_distance = torch.zeros((bs, seq_len, self.old_classes)).to(feat.device)
+
         for i in range(self.old_classes):
-            feat_proto_distance[:, :, i] = torch.norm(self.prototypes[i].reshape(1,1,-1).expand(bs,seq_len,-1) - feat, 2, dim=-1,)
+            proto_norm = F.normalize(self.prototypes[i], p=2, dim=-1)  # (hidden_dim,)
+            # Cosine distance = 1 - cosine similarity
+            # cosine_sim = feat_norm · proto_norm
+            cosine_sim = torch.sum(
+                feat_norm * proto_norm.view(1, 1, -1),
+                dim=-1
+            )  # (bs, seq_len)
+            feat_proto_distance[:, :, i] = 1.0 - cosine_sim
+
         return feat_proto_distance
 
     
@@ -447,48 +466,71 @@ class BaseTrainer(object):
         return (per_proto_loss * anchor_weights).mean()
 
     def prototype_feature_anchor_loss(self, refer_dims, original_labels):
-        """Anchor old-class token features to old prototypes (gradient to encoder)."""
+        """
+        特征级别的原型锚定损失（修复版）
+
+        修复要点：
+        1. 使用教师模型预测来识别旧类token（原始标签把旧类标为O）
+        2. 使用cosine距离（与分类器一致），而不是L2距离
+        3. 特征归一化后计算距离
+        4. **关键修复：只对原始标签为O的token应用，避免把新类拉向旧类**
+
+        梯度回传到encoder，防止特征空间漂移
+        """
         if not getattr(self.params, "is_use_prototype_feature_anchor", False):
             return torch.tensor(0., requires_grad=True).cuda()
         if not hasattr(self, "prototypes") or self.prototypes is None:
             return torch.tensor(0., requires_grad=True).cuda()
         if self.prototypes.numel() == 0:
             return torch.tensor(0., requires_grad=True).cuda()
+        if self.refer_model is None:
+            return torch.tensor(0., requires_grad=True).cuda()
 
-        # Get anchor weights for high-risk old classes
+        # 使用教师模型预测旧类token（关键修复！）
+        with torch.no_grad():
+            teacher_logits = self.refer_model(self.inputs)  # [batch, seq_len, old_classes]
+            teacher_probs = torch.softmax(teacher_logits, dim=-1)
+            teacher_confidence, teacher_labels = teacher_probs.max(dim=-1)
+
+        # 筛选条件（关键修复：添加 original_labels == 0）
+        min_confidence = 0.7
+        valid_mask = (
+            (original_labels == 0) &            # ← 关键！只对标注为O的token（可能是旧类）
+            (teacher_labels > 0) &              # 排除O类（教师预测为实体）
+            (teacher_labels < refer_dims) &     # 只要旧类
+            (teacher_confidence >= min_confidence) &  # 高置信度
+            (original_labels != pad_token_label_id)   # 排除padding
+        )
+
+        if not torch.any(valid_mask):
+            return torch.tensor(0., requires_grad=True).cuda()
+
+        # 提取旧类token的特征和标签
+        old_features = self.features[valid_mask]  # [N_old, hidden_dim]
+        old_labels = teacher_labels[valid_mask]    # [N_old]
+
+        # 获取风险权重（高风险类别加强约束）
         anchor_weights = self.get_prototype_anchor_weights(
             refer_dims=refer_dims,
             device=self.features.device
         )
 
-        loss_per_class = []
-        for label_idx in range(refer_dims):
-            # Only anchor high-risk old classes (weight > 1.0)
-            if anchor_weights[label_idx] <= 1.0:
-                continue
+        # 获取对应的原型和权重
+        prototype_features = torch.stack([self.prototypes[label] for label in old_labels])  # [N_old, hidden_dim]
+        token_weights = torch.stack([anchor_weights[label] for label in old_labels])  # [N_old]
 
-            # Find tokens in batch belonging to this old class
-            mask = (original_labels == label_idx)
-            if mask.sum() < 1:
-                continue
+        # 修复：使用cosine距离（与分类器一致），归一化后计算
+        old_features_norm = F.normalize(old_features, p=2, dim=-1)
+        prototype_features_norm = F.normalize(prototype_features, p=2, dim=-1)
 
-            # Get features of old-class tokens
-            old_features = self.features[mask]  # (N, hidden_dim)
-            old_prototype = self.prototypes[label_idx].detach()  # (hidden_dim,)
+        # Cosine distance = 1 - cosine similarity
+        cosine_sim = F.cosine_similarity(old_features_norm, prototype_features_norm, dim=-1)
+        distance = 1.0 - cosine_sim  # [N_old]
 
-            # Pull old-class features towards their prototype (L2 distance)
-            distance = torch.norm(old_features - old_prototype.unsqueeze(0), dim=-1)
+        # 加权平均（高风险类权重更大）
+        weighted_loss = (distance * token_weights).mean()
 
-            # Weight by risk level (higher risk = stronger anchor)
-            risk_weight = anchor_weights[label_idx] - 1.0  # Only the excess over 1.0
-            weighted_distance = distance * risk_weight
-
-            loss_per_class.append(weighted_distance.mean())
-
-        if not loss_per_class:
-            return torch.tensor(0., requires_grad=True).cuda()
-
-        return torch.stack(loss_per_class).mean()
+        return weighted_loss
 
     def risk_contrastive_loss(self, original_labels):
         """Separate current new-type features from high-risk old prototypes."""

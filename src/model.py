@@ -70,22 +70,24 @@ class CosineLinear(nn.Module):
             self.sigma.data.fill_(1) #for initializaiton of sigma
 
     def forward(self, input, num_head=1):
-
+        # input: (batch, seq_len, hidden_dim)
+        # 修复：应该沿最后一维(hidden_dim)归一化，而不是seq_len
         if num_head>1:
             out=[]
-            head_dim = input.size(1)//num_head
-            input_list = torch.split(input, head_dim, dim=1)
-            input_list = [F.normalize(input_item, p=2,dim=1) for input_item in input_list]
+            head_dim = input.size(-1)//num_head  # 修复：用-1表示最后一维
+            input_list = torch.split(input, head_dim, dim=-1)  # 修复：dim=-1
+            input_list = [F.normalize(input_item, p=2, dim=-1) for input_item in input_list]  # 修复：dim=-1
             weight_list = torch.split(self.weight, head_dim, dim=1)
-            weight_list = [F.normalize(weight_item, p=2,dim=1) for weight_item in weight_list]
+            weight_list = [F.normalize(weight_item, p=2, dim=1) for weight_item in weight_list]
             for n_input, n_weight in zip(input_list, weight_list):
                 out.append(F.linear(n_input, n_weight))
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()  # 移除调试代码
             out = sum(out)
         else:
-            # (bs, seq_len, out_dim)
-            out = F.linear(F.normalize(input, p=2,dim=1), \
-                F.normalize(self.weight, p=2, dim=1))  # （bs, seq_len, hidden_dim） w: (out_dim, hidden_dim)
+            # (batch, seq_len, hidden_dim) -> (batch, seq_len, out_dim)
+            # 修复：input沿hidden_dim归一化(dim=-1)，weight沿hidden_dim归一化(dim=1)
+            out = F.linear(F.normalize(input, p=2, dim=-1), \
+                F.normalize(self.weight, p=2, dim=1))
 
         if self.sigma is not None:
             out = self.sigma * out
