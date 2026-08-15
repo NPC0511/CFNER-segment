@@ -752,3 +752,156 @@ One-sentence description:
 ```text
 We build a task-aware semantic risk graph over entity types, use an LLM-agent and semantic memory to estimate old-new interference risk, and use the graph to control distillation, prototype anchoring, contrastive separation, and pseudo-label validation under a strict no-old-sample continual NER setting.
 ```
+
+## 12. Current Implementation Audit (2026-08-15)
+
+This section is the operational source of truth for the current code.  It
+supersedes earlier aspirational statements in this document when they disagree.
+
+### 12.1 Repository and Local Git
+
+```text
+GitHub repository: https://github.com/NPC0511/CFNER-segment.git
+Remote name:       origin
+Default branch:    main
+Local Git command: E:\Git\cmd\git.exe
+Git command path:  E:\Git\cmd
+```
+
+`E:\Git\cmd` must be present in the Windows user or system `Path` for new
+PowerShell sessions to resolve `git` directly.  The repository can always be
+operated with the explicit command path above.
+
+### 12.2 Actual Training Dataflow
+
+```text
+new task labels + previous model + semantic memory
+    -> retrieve definitions, annotation rules, examples, and rule edges
+    -> local LLM pairwise ranking of old targets (semantic interference prior)
+    -> rule/LLM hybrid risk edges
+    -> optional reflection and teacher-confusion updates
+    -> training_policy
+    -> RDP pseudo labels, weighted KL, prototype losses, contrastive loss,
+       optional feature alignment, task-end evaluation and reflection
+```
+
+The graph edge `new_type -> old_type` is an *interference prior*, not a direct
+measurement of catastrophic forgetting.  Semantic overlap, contextual
+ambiguity, and annotation-boundary conflict can identify a candidate old type,
+but cannot by themselves predict encoder parameter drift or the final old-class
+F1 drop.  Real forgetting must be measured after training and fed back through
+reflection.
+
+### 12.3 Implemented and Active Components
+
+```text
+[active]   Rule risk from reviewed confusion rules.
+[active]   Local-LLM pairwise ranking of old targets, then rule/LLM risk fusion.
+[active]   Teacher new-to-old confusion evidence before each incremental task.
+[active]   Risk threshold -> old-label KL weights, prototype-classifier weights,
+           pseudo-label thresholds, contrastive pairs, and verifier candidates.
+[active]   RDP pseudo-label, soft-label, and logits distillation losses.
+[active]   Persistent class prototypes and prototype-classifier anchor loss.
+[active]   Task-end per-class F1, forgetting, confusion, and risk-analysis output.
+[active]   CosineLinear normalizes token features along hidden_dim (`dim=-1`).
+[active]   Prototype distances use cosine distance, consistent with the classifier.
+[configured] Risk feature alignment, reflection update, and old-class
+             vulnerability are enabled in the current CoNLL semantic config.
+```
+
+### 12.4 Implemented but Not Connected to the Main Path
+
+The following functions or parameters currently do not affect a normal
+`main_CL.py` training run.  Their configuration flags must not be interpreted
+as evidence that the feature is active.
+
+```text
+is_collect_prototype_similarity
+    get_new_to_old_prototype_similarity_pairs() is not called and the returned
+    pairs are never attached to graph edges.
+
+is_use_instance_context_risk
+    get_entity_context_examples() is not called and no extracted contexts are
+    supplied to SemanticAgent or LocalLLMAgent.
+
+_build_risk_evidence_cards()
+    Exists, but is not invoked while constructing the LLM prompt.
+
+_apply_risk_calibration()
+    Exists, but build_plan() does not call it; the ridge calibrator therefore
+    cannot alter an edge even when configured.
+
+semantic_prior_max_delta
+    Is accepted by SemanticAgent but not used in risk fusion.  It currently
+    cannot limit an LLM-induced increase of rule risk.
+```
+
+### 12.5 Reflection Status
+
+Reflection records are saved after a task with observed old-class F1 drop and
+old-to-new confusion.  They affect a later plan only when all conditions hold:
+
+```text
+reflection_update_weight > 0
+the configured reflection_cache_dir contains an earlier task reflection
+the earlier reflection task_id is lower than the current task_id
+```
+
+The historical run represented by workspace-root `train.log` used
+`reflection_update_weight: 0.0`; reflection was recorded but had no training
+effect, and `final_risk` therefore matched `initial_risk`.  The current CoNLL
+config sets `reflection_update_weight: 0.3`, which can affect only a new run
+with compatible earlier reflection files.
+
+### 12.6 Confirmed Risks and Defects
+
+Priority order for the next code changes:
+
+```text
+P0  Prototype feature anchor currently selects high-confidence old-teacher
+    labels without excluding current-task new-class tokens.  The old teacher
+    cannot recognize a new class, so a high-confidence teacher error can pull a
+    supervised new token toward an old prototype.  Restrict this loss to
+    original O tokens (the hidden-old-token region), or otherwise explicitly
+    exclude all current new-class labels.
+
+P1  With is_train_by_steps=True, the scheduler is stepped both per batch and at
+    the epoch boundary.  Scheduler ownership must be exclusive: step-based or
+    epoch-based, never both.
+
+P1  Prototype feature anchoring, risk feature alignment, and contrastive loss
+    must log selected-token/pair counts and their weighted contribution.  A
+    configured loss can otherwise silently be zero for an entire task.
+
+P1  Reflection updates apply empirical old-class risk to every later edge that
+    targets that old class.  This is a class vulnerability signal, not a
+    source-target causal estimate; do not interpret it as pairwise ground truth.
+
+P2  `eval()` is used for schedules and entity-list parsing.  Replace it with
+    `ast.literal_eval()` or native YAML lists before using untrusted configs.
+
+P2  Device use is hard-coded through `.cuda()`.  Replace it with device-aware
+    `.to(device)` and tensor factories derived from an existing tensor.
+
+P2  `torch.load()` uses pickle semantics.  Only load trusted checkpoints or use
+    a restricted loading path where supported.
+```
+
+### 12.7 Recommended Next Implementation Order
+
+```text
+1. Correct the feature-anchor mask so it never anchors known new-class tokens
+   to old prototypes; add selected-token diagnostics.
+2. Make scheduler stepping mutually exclusive for epoch and step modes.
+3. Wire prototype-similarity extraction and instance-context extraction into
+   build_plan(), but treat them as evidence features rather than direct
+   forgetting labels.
+4. Call risk calibration only after enough prior reflections exist and log its
+   mode, sample count, coefficients, and final edge deltas.
+5. Enforce semantic_prior_max_delta in the fusion function, or remove the
+   parameter to avoid misleading experiment configuration.
+6. Run one fixed-seed smoke training job and verify every configured loss has a
+   nonzero activation count before evaluating F1 claims.
+7. After the mechanism is stable, run ablations and compare old-class F1 drop,
+   feature drift, and risk-ranking quality against RDP.
+```
