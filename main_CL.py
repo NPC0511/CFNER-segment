@@ -572,10 +572,11 @@ def main_cl(params):
 
             # Print training information
             if params.info_per_epochs>0 and e%params.info_per_epochs==0: # params.info_per_epochs=1    每隔一个epoch 输出信息s
-                logger.info("Epoch %d, Step %d: Total_loss=%.3f, CE_loss=%.3f, Distill_loss=%.3f, Prototype_anchor_loss=%.3f, Risk_contrastive_loss=%.3f, Risk_filtered_pseudo_labels=%d, Risk_retained_pseudo_labels=%d, Training_exact_match=%.2f%%"%(
+                logger.info("Epoch %d, Step %d: Total_loss=%.3f, CE_loss=%.3f, Distill_loss=%.3f, Prototype_anchor_loss=%.3f, Risk_contrastive_loss=%.3f, Risk_feature_alignment_loss=%.3f, Risk_filtered_pseudo_labels=%d, Risk_retained_pseudo_labels=%d, Training_exact_match=%.2f%%"%(
                             e, step, mean_loss, \
                             mean_ce_loss, mean_distill_loss, trainer.last_prototype_anchor_loss,
-                            trainer.last_risk_contrastive_loss, trainer.last_risk_filtered_pseudo_labels,
+                            trainer.last_risk_contrastive_loss, trainer.last_risk_feature_alignment_loss,
+                            trainer.last_risk_filtered_pseudo_labels,
                             trainer.last_risk_retained_pseudo_labels,
                             correct_cnt/total_cnt*100
                     ))

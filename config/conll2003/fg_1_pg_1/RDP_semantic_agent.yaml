@@ -41,22 +41,28 @@ is_unfix_O_classifier: False
 soft_param: 0.3
 regular_param: 0.1
 
-distill_logits_weight: 2
+distill_logits_weight: 1.5  # 降低蒸馏权重，给风险约束更多空间
 
 ### semantic agent
 is_use_semantic_agent: True
 semantic_memory_path: semantic_memory/conll2003/entity_types.json
 semantic_distill_base_weight: 1.2
-semantic_risk_threshold: 0.5
-semantic_max_weight: 1.6
+semantic_risk_threshold: 0.4  # ← 降低阈值，让更多边生效
+semantic_max_weight: 1.8  # ← 提高最大权重
 is_use_model_risk: True
 model_confusion_risk_scale: 2.0
+is_collect_prototype_similarity: True  # ← 启用特征漂移检测
+is_use_instance_context_risk: True  # ← 启用上下文共现检测
+instance_context_examples_per_type: 2
 is_use_risk_aware_pseudo_label: True
 pseudo_label_min_confidence: 0.55
 pseudo_label_max_confidence: 0.80
 is_use_risk_contrastive: True
-risk_contrastive_weight: 0.1
-risk_contrastive_margin: 0.2
+risk_contrastive_weight: 0.15  # ← 提高对比学习权重
+risk_contrastive_margin: 0.25  # ← 增大margin
+is_use_risk_feature_alignment: True
+risk_feature_alignment_weight: 0.1
+risk_feature_alignment_min_confidence: 0.70
 is_use_risk_graph: True
 risk_graph_cache_dir: semantic_cache/risk_graph
 is_save_risk_graph_plot: True
@@ -64,18 +70,18 @@ is_use_reflection_memory: True
 reflection_cache_dir: semantic_cache/reflection
 reflection_risk_threshold: 0.5
 reflection_forgetting_threshold: 1.0
-rule_risk_weight: 0.8
-llm_risk_weight: 0.2
-reflection_update_weight: 0.0
+rule_risk_weight: 0.7  # 提高规则权重（相关性0.82）
+llm_risk_weight: 0.3   # 降低LLM权重（相关性-0.10）
+reflection_update_weight: 0.3  # ← 启用反思更新！从历史遗忘学习
 reflection_forgetting_weight: 0.6
 reflection_confusion_weight: 0.4
 reflection_forgetting_scale: 5.0
-is_use_old_class_vulnerability: False
+is_use_old_class_vulnerability: True  # ← 启用脆弱性评分
 old_class_vulnerability_f1_floor: 80.0
 old_class_vulnerability_weight: 0.3
 is_save_risk_analysis: True
 is_use_prototype_anchor: True
-prototype_anchor_weight: 0.5
+prototype_anchor_weight: 0.8  # ← 提高原型锚定权重
 prototype_memory_cache_dir: semantic_cache/prototype_memory
 is_use_local_llm_agent: True
 local_llm_model_path: /root/autodl-tmp/models/Qwen2.5-1.5B-Instruct

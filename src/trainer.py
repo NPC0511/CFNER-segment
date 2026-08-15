@@ -34,6 +34,7 @@ class BaseTrainer(object):
         self.last_risk_filtered_pseudo_labels = 0
         self.last_risk_retained_pseudo_labels = 0
         self.last_risk_contrastive_loss = 0.0
+        self.last_risk_feature_alignment_loss = 0.0
         self.llm_verifier = None
         self.llm_verifier_stats = {
             "eligible": 0,
@@ -493,6 +494,49 @@ class BaseTrainer(object):
             return self.features.new_tensor(0.0)
         return torch.stack(pair_losses).mean()
 
+    def risk_feature_alignment_loss(self, refer_features, refer_logits, original_labels, refer_dims):
+        """Align high-risk old token features with the frozen teacher encoder."""
+        if not getattr(self.params, "is_use_risk_feature_alignment", False):
+            return self.features.new_tensor(0.0)
+
+        training_policy = getattr(self, "training_policy", {}) or {}
+        old_label_weights = training_policy.get("old_label_weights", {})
+        if not old_label_weights:
+            return self.features.new_tensor(0.0)
+
+        teacher_probs = torch.softmax(refer_logits, dim=-1)
+        teacher_confidence, teacher_labels = teacher_probs.max(dim=-1)
+        label_weights = self.features.new_zeros(refer_dims)
+        for label_name, label_weight in old_label_weights.items():
+            if label_name not in self.label_list:
+                continue
+            label_index = self.label_list.index(label_name)
+            if 0 < label_index < refer_dims:
+                label_weights[label_index] = float(label_weight)
+
+        min_confidence = min(max(
+            float(getattr(self.params, "risk_feature_alignment_min_confidence", 0.7)), 0.0
+        ), 1.0)
+        valid_tokens = (
+            (original_labels == 0) &
+            (original_labels != pad_token_label_id) &
+            (teacher_labels > 0) &
+            (teacher_labels < refer_dims) &
+            (teacher_confidence >= min_confidence)
+        )
+        token_weights = label_weights[teacher_labels]
+        valid_tokens = valid_tokens & (token_weights > 0)
+        if not torch.any(valid_tokens):
+            return self.features.new_tensor(0.0)
+
+        feature_distance = 1.0 - F.cosine_similarity(
+            self.features[valid_tokens],
+            refer_features[valid_tokens],
+            dim=-1
+        )
+        selected_weights = token_weights[valid_tokens]
+        return (feature_distance * selected_weights).sum() / selected_weights.sum().clamp_min(1e-8)
+
 
     def reg_pesudo_label(self, output):
 
@@ -599,12 +643,20 @@ class BaseTrainer(object):
         self.last_prototype_anchor_loss = float(prototype_anchor_loss.detach().cpu().item())
         contrastive_loss = self.risk_contrastive_loss(original_labels=original_labels)
         self.last_risk_contrastive_loss = float(contrastive_loss.detach().cpu().item())
+        feature_alignment_loss = self.risk_feature_alignment_loss(
+            refer_features=refer_features,
+            refer_logits=refer_logits,
+            original_labels=original_labels,
+            refer_dims=refer_dims
+        )
+        self.last_risk_feature_alignment_loss = float(feature_alignment_loss.detach().cpu().item())
 
         distill_loss = self.params.soft_param * loss_soft_label + \
                         self.params.regular_param * Regularizer_soft + \
                         self.params.distill_logits_weight * distill_logits_loss + \
                         self.params.prototype_anchor_weight * prototype_anchor_loss + \
-                        self.params.risk_contrastive_weight * contrastive_loss
+                        self.params.risk_contrastive_weight * contrastive_loss + \
+                        self.params.risk_feature_alignment_weight * feature_alignment_loss
 
         self.loss = ce_loss + distill_loss
 

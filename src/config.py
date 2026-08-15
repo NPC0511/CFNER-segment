@@ -165,6 +165,12 @@ def get_params():
                         help="Global coefficient for the risk-guided contrastive loss")
     parser.add_argument("--risk_contrastive_margin", type=float, default=0.2,
                         help="Cosine-similarity margin between new features and old prototypes")
+    parser.add_argument("--is_use_risk_feature_alignment", default=False, action="store_true",
+                        help="Align high-risk old token features with the frozen teacher encoder")
+    parser.add_argument("--risk_feature_alignment_weight", type=float, default=0.1,
+                        help="Global coefficient for risk-guided teacher feature alignment")
+    parser.add_argument("--risk_feature_alignment_min_confidence", type=float, default=0.7,
+                        help="Minimum teacher confidence for a token to receive feature alignment")
     parser.add_argument("--is_use_risk_graph", default=False, action="store_true",
                         help="If building and saving task-level risk graphs")
     parser.add_argument("--risk_graph_cache_dir", type=str, default="semantic_cache/risk_graph",
