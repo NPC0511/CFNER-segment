@@ -1,0 +1,10 @@
+# Fast evidence-collection run. It inherits every controlled setting from the
+# calibrated configuration and only reduces epochs and isolates caches.
+base_cfg: RDP_semantic_agent_calibrated.yaml
+first_training_epochs: 2
+training_epochs: 2
+risk_graph_cache_dir: semantic_cache/ontonotes5_v4_prototype_quick/risk_graph
+semantic_cache_dir: semantic_cache/ontonotes5_v4_prototype_quick
+reflection_cache_dir: semantic_cache/ontonotes5_v4_prototype_quick/reflection
+prototype_memory_cache_dir: semantic_cache/ontonotes5_v4_prototype_quick/prototype_memory
+llm_verifier_cache_dir: semantic_cache/ontonotes5_v4_prototype_quick/llm_verifier

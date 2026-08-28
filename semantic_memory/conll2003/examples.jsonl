@@ -1,0 +1,9 @@
+{"dataset": "conll2003", "entity_type": "person", "text": "John Smith joined Reuters in London.", "span": "John Smith", "label": "person", "example_type": "positive"}
+{"dataset": "conll2003", "entity_type": "person", "text": "Reuters reported the story from London.", "span": "Reuters", "label": "organisation", "example_type": "negative"}
+{"dataset": "conll2003", "entity_type": "location", "text": "Reuters reported the story from London.", "span": "London", "label": "location", "example_type": "positive"}
+{"dataset": "conll2003", "entity_type": "location", "text": "London defeated Manchester in the final.", "span": "London", "label": "organisation", "example_type": "confusion"}
+{"dataset": "conll2003", "entity_type": "organisation", "text": "Reuters reported the story from London.", "span": "Reuters", "label": "organisation", "example_type": "positive"}
+{"dataset": "conll2003", "entity_type": "organisation", "text": "John Smith joined Reuters in London.", "span": "London", "label": "location", "example_type": "negative"}
+{"dataset": "conll2003", "entity_type": "organisation", "text": "Paris signed the striker from Milan.", "span": "Paris", "label": "organisation", "example_type": "confusion"}
+{"dataset": "conll2003", "entity_type": "misc", "text": "The European Cup final was held in London.", "span": "European Cup", "label": "misc", "example_type": "positive"}
+{"dataset": "conll2003", "entity_type": "misc", "text": "Germany beat France in the tournament.", "span": "Germany", "label": "location", "example_type": "negative"}

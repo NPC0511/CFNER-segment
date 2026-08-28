@@ -1,0 +1,106 @@
+### Model
+seed: 1314
+is_load_ckpt_if_exists: True
+is_load_common_first_model: True
+dropout: 0
+hidden_dim: 768
+
+### Data
+data_path: [datasets/NER_data/conll2003]
+n_samples: -1
+schema: BIO
+is_load_disjoin_train: True
+
+### Training
+batch_size: 8
+max_seq_length: 512
+
+lr: 5e-5  # BERT encoder fine-tuning learning rate
+stable_lr: 2e-5  # 后续增量任务学习率
+
+schedule: (5,)  # 第一个任务在epoch 5衰减
+gamma: 0.2  # 衰减率
+stable_schedule: (10, 20)  # 后续任务在epoch 10和20衰减
+stable_gamma: 0.5  # 后续任务的衰减率
+
+first_training_epochs: 20
+training_epochs: 30
+evaluate_interval: 1
+info_per_epochs: 1
+early_stop: 50
+checkpoint_selection_metric: cumulative_macro
+
+### CL
+nb_class_pg: 1
+nb_class_fg: 1
+
+is_rescale_new_weight: True
+is_fix_trained_classifier: False  # 不冻结旧分类器，允许适应新特征空间
+is_unfix_O_classifier: False
+
+### baseline model
+
+soft_param: 0.3
+regular_param: 0.1
+
+distill_logits_weight: 2.0  # 恢复蒸馏权重（解冻后蒸馏才有效）
+
+### semantic agent
+is_use_semantic_agent: True
+semantic_memory_path: semantic_memory/conll2003/entity_types.json
+semantic_distill_base_weight: 1.2
+semantic_risk_threshold: 0.4  # ← 降低阈值，让更多边生效
+semantic_max_weight: 1.8  # ← 提高最大权重
+is_use_model_risk: True
+model_confusion_risk_scale: 2.0
+is_collect_prototype_similarity: True  # ← 启用特征漂移检测
+is_use_instance_context_risk: True  # ← 启用上下文共现检测
+instance_context_examples_per_type: 2
+is_use_risk_aware_pseudo_label: True
+pseudo_label_min_confidence: 0.55
+pseudo_label_max_confidence: 0.80
+risk_pseudo_label_fallback_confidence: 0.45
+is_use_risk_contrastive: True
+risk_contrastive_weight: 0.15  # ← 提高对比学习权重
+risk_contrastive_margin: 0.25  # ← 增大margin
+is_use_risk_feature_alignment: True
+risk_feature_alignment_weight: 0.1
+risk_feature_alignment_min_confidence: 0.70
+is_use_risk_graph: True
+risk_graph_cache_dir: semantic_cache/risk_graph
+is_save_risk_graph_plot: True
+is_use_reflection_memory: True
+reflection_cache_dir: semantic_cache/reflection
+reflection_risk_threshold: 0.5
+reflection_forgetting_threshold: 1.0
+rule_risk_weight: 0.7  # 提高规则权重（相关性0.82）
+llm_risk_weight: 0.3   # 降低LLM权重（相关性-0.10）
+reflection_update_weight: 0.3  # ← 启用反思更新！从历史遗忘学习
+reflection_forgetting_weight: 0.6
+reflection_confusion_weight: 0.4
+reflection_forgetting_scale: 5.0
+is_use_old_class_vulnerability: True  # ← 启用脆弱性评分
+old_class_vulnerability_f1_floor: 80.0
+old_class_vulnerability_weight: 0.3
+is_save_risk_analysis: True
+is_use_prototype_anchor: True
+prototype_anchor_weight: 0.8  # ← 提高原型锚定权重
+is_use_prototype_feature_anchor: True  # 新增：特征层面的原型锚定（梯度到encoder）
+prototype_feature_anchor_weight: 0.4  # 新增：特征锚定权重，防止特征空间漂移
+prototype_memory_cache_dir: semantic_cache/prototype_memory
+is_use_local_llm_agent: True
+local_llm_model_path: /root/autodl-tmp/models/Qwen2.5-1.5B-Instruct
+semantic_cache_dir: semantic_cache
+local_llm_max_new_tokens: 512
+local_llm_temperature: 0.0
+local_llm_torch_dtype: float32
+
+### stage 3 llm verifier
+is_use_llm_verifier: False
+llm_verifier_model_path: /root/autodl-tmp/models/Qwen2.5-1.5B-Instruct
+llm_verifier_cache_dir: semantic_cache/llm_verifier
+llm_verifier_max_new_tokens: 256
+llm_verifier_temperature: 0.0
+llm_verifier_torch_dtype: float32
+llm_verifier_max_checks_per_batch: 2
+llm_verifier_confidence_threshold: 0.75

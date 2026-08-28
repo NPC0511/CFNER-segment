@@ -1,0 +1,72 @@
+{
+  "datasets": {
+    "conll2003": {
+      "rules": {
+        "person": [
+          "Tag names of individual people as person.",
+          "Do not include job titles unless the dataset annotation includes them as part of the name.",
+          "Person names often co-occur with organisation names in employment, reporting, or sports contexts."
+        ],
+        "location": [
+          "Tag geographical places such as countries, cities, states, regions, rivers, and landmarks as location.",
+          "Location names may appear inside organisation names, but the full organisation mention should not be split if it denotes an institution.",
+          "Location is frequently confused with organisation when an institution or team is named after a place."
+        ],
+        "organisation": [
+          "Tag companies, agencies, institutions, sports teams, and news agencies as organisation.",
+          "Organisation mentions often co-occur with person names and location names.",
+          "A place name should be organisation when it refers to a team, institution, company, or agency rather than a geographical place."
+        ],
+        "misc": [
+          "Tag named entities that do not fit person, location, or organisation as misc.",
+          "Misc includes nationalities, events, products, works, languages, and other named categories.",
+          "Misc is weakly related to all other entity types because it is a residual category."
+        ]
+      },
+      "confusion_rules": [
+        {
+          "source_type": "organisation",
+          "target_type": "person",
+          "weight": 1.5,
+          "reason": "Organisation mentions often appear near person mentions in employment, reporting, and sports contexts."
+        },
+        {
+          "source_type": "organisation",
+          "target_type": "location",
+          "weight": 1.7,
+          "reason": "Organisation names may contain place names or be confused with teams and institutions named after locations."
+        },
+        {
+          "source_type": "location",
+          "target_type": "organisation",
+          "weight": 1.7,
+          "reason": "Location names can refer to teams or institutions, making organisation a high-risk old type."
+        },
+        {
+          "source_type": "person",
+          "target_type": "organisation",
+          "weight": 1.5,
+          "reason": "Person mentions frequently co-occur with organisations, and context may shift between individual and institution."
+        },
+        {
+          "source_type": "misc",
+          "target_type": "person",
+          "weight": 1.1,
+          "reason": "Misc is a broad residual category and has weak ambiguity with person names."
+        },
+        {
+          "source_type": "misc",
+          "target_type": "location",
+          "weight": 1.1,
+          "reason": "Misc includes nationalities and events that can be contextually related to locations."
+        },
+        {
+          "source_type": "misc",
+          "target_type": "organisation",
+          "weight": 1.1,
+          "reason": "Misc includes products, events, and works that can be contextually related to organisations."
+        }
+      ]
+    }
+  }
+}

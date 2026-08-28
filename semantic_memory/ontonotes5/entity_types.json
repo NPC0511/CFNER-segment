@@ -1,0 +1,26 @@
+{
+  "datasets": {
+    "ontonotes5": {
+      "entity_types": {
+        "CARDINAL": {"definition": "Numbers that are not quantities, dates, times, money, percentages, or ordinals.", "positive_examples": ["three", "355.35"], "negative_examples": ["third", "20 percent"]},
+        "DATE": {"definition": "Absolute or relative calendar dates, including years, months, days, and date ranges.", "positive_examples": ["September 1st", "in 2024"], "negative_examples": ["this morning", "three days"]},
+        "EVENT": {"definition": "Named or commonly identified events, competitions, wars, and natural events.", "positive_examples": ["World Swimming Championship", "the Olympics"], "negative_examples": ["the meeting", "summer"]},
+        "FAC": {"definition": "Human-made facilities, buildings, airports, highways, bridges, and other infrastructure.", "positive_examples": ["Heathrow Airport", "Golden Gate Bridge"], "negative_examples": ["London", "Google"]},
+        "GPE": {"definition": "Countries, cities, states, and political or geographical entities with governing functions.", "positive_examples": ["Rome", "China", "California"], "negative_examples": ["the Pacific Ocean", "United Nations"]},
+        "LANGUAGE": {"definition": "Named natural languages and language varieties.", "positive_examples": ["English", "Mandarin Chinese"], "negative_examples": ["French government", "European"]},
+        "LAW": {"definition": "Named legal documents, statutes, treaties, and legal codes.", "positive_examples": ["the Clean Air Act", "the Constitution"], "negative_examples": ["the court", "a law"]},
+        "LOC": {"definition": "Geographical locations that are not GPEs, including mountains, bodies of water, and regions.", "positive_examples": ["the Pacific Ocean", "Mount Everest"], "negative_examples": ["Rome", "France"]},
+        "MONEY": {"definition": "Monetary values, currencies, and amounts of money.", "positive_examples": ["$5 million", "20 euros"], "negative_examples": ["20 percent", "five shares"]},
+        "NORP": {"definition": "Nationalities, religious groups, and political or social groups.", "positive_examples": ["Chinese", "Catholics", "Democrats"], "negative_examples": ["China", "English"]},
+        "ORDINAL": {"definition": "Ordinal numbers and ranked positions.", "positive_examples": ["first", "Seventh"], "negative_examples": ["seven", "July 7"]},
+        "ORG": {"definition": "Named organizations, companies, agencies, institutions, teams, and media outlets.", "positive_examples": ["Xinhua News Agency", "United Nations"], "negative_examples": ["Rome", "John Smith"]},
+        "PERCENT": {"definition": "Percentages and percentage expressions.", "positive_examples": ["15 percent", "0.5%"], "negative_examples": ["15 dollars", "15 people"]},
+        "PERSON": {"definition": "Names of individual people and named fictional characters.", "positive_examples": ["Aiguo Yang", "Lan Wei"], "negative_examples": ["Xinhua", "Rome"]},
+        "PRODUCT": {"definition": "Named products, objects, vehicles, foods, and commercial goods.", "positive_examples": ["iPhone", "Boeing 747"], "negative_examples": ["Apple Inc.", "a phone"]},
+        "QUANTITY": {"definition": "Measured quantities with units, excluding money, percentages, dates, and times.", "positive_examples": ["1-meter", "355.35 points"], "negative_examples": ["$355", "35 percent"]},
+        "TIME": {"definition": "Times of day and durations shorter than a day when expressed as temporal references.", "positive_examples": ["this morning", "3 p.m."], "negative_examples": ["September", "three weeks"]},
+        "WORK_OF_ART": {"definition": "Titles of artistic, literary, musical, television, film, and other creative works.", "positive_examples": ["The Great Gatsby", "Star Wars"], "negative_examples": ["the book", "Academy Awards"]}
+      }
+    }
+  }
+}

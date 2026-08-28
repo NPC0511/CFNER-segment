@@ -1,0 +1,12 @@
+{
+  "dataset": "conll2003",
+  "version": "v2",
+  "created_at_utc": "2026-07-23T07:16:59.351012+00:00",
+  "memory_kind": "human_reviewed_frozen",
+  "base_memory_path": "human-reviewed CoNLL2003 semantic memory",
+  "base_memory_sha256": "8d1b586bd4f9e71186ce3a32cb53dc7946690951213503fb7db65ccd14f18222",
+  "artifact_sha256": "8d1b586bd4f9e71186ce3a32cb53dc7946690951213503fb7db65ccd14f18222",
+  "review_status": "approved_for_training",
+  "training_memory_source": "human_backbone",
+  "training_memory_path": "semantic_memory/conll2003/entity_types.json"
+}
