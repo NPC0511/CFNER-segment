@@ -1,0 +1,23 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+
+# Dataset, trained models, and generated experiment output
+datasets/
+experiments/
+experiment/
+semantic_cache/
+snapshots/
+*.pt
+*.pth
+*.ckpt
+
+# Machine-local logs and analysis output
+*.log
+summary.csv
+risk_prediction_metrics.json
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/

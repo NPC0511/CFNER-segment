@@ -1,0 +1,27 @@
+{
+  "datasets": {
+    "ontonotes5": {
+      "rules": {
+        "CARDINAL": ["Use CARDINAL for bare numeric values when no more specific numeric category applies."],
+        "DATE": ["Use DATE for calendar dates and date ranges; use TIME for times of day."],
+        "EVENT": ["Use EVENT for a named competition, occurrence, or event rather than an unnamed activity."],
+        "FAC": ["Use FAC for built infrastructure; use LOC or GPE for natural or political places."],
+        "GPE": ["Use GPE for political geographical entities such as countries, cities, and states."],
+        "LANGUAGE": ["Use LANGUAGE only for a language name, not for a nationality or country."],
+        "LAW": ["Use LAW for the title of a statute, treaty, constitution, or legal code."],
+        "LOC": ["Use LOC for non-political geographic regions and natural features; use GPE for countries and cities."],
+        "MONEY": ["Use MONEY only when a currency or monetary amount is expressed."],
+        "NORP": ["Use NORP for national, religious, and political groups; use GPE for the country or city itself."],
+        "ORDINAL": ["Use ORDINAL for rank or order, not for a bare cardinal number."],
+        "ORG": ["Use ORG for an institution, company, team, agency, or media organization."],
+        "PERCENT": ["Use PERCENT for a numeric percentage or proportion explicitly expressed as a percent."],
+        "PERSON": ["Use PERSON for an individual person's name, excluding adjacent titles unless included by annotation."],
+        "PRODUCT": ["Use PRODUCT for a specifically named commercial product or object, not its manufacturer."],
+        "QUANTITY": ["Use QUANTITY for a measured amount with a non-monetary, non-percent unit."],
+        "TIME": ["Use TIME for clock times and within-day temporal expressions, not calendar dates."],
+        "WORK_OF_ART": ["Use WORK_OF_ART for the title of a creative work, not a generic description of the work."]
+      },
+      "confusion_rules": []
+    }
+  }
+}

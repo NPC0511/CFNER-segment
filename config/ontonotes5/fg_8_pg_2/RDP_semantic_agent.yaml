@@ -1,0 +1,101 @@
+### Model
+seed: 1314
+# Keep OntoNotes runs independent from any existing checkpoints.
+is_load_ckpt_if_exists: False
+is_load_common_first_model: False
+dropout: 0
+hidden_dim: 768
+
+### Data
+data_path: [datasets/NER_data/ontonotes5]
+n_samples: -1
+schema: BIO
+is_load_disjoin_train: True
+
+### Training
+batch_size: 8
+max_seq_length: 512
+lr: 2e-3
+stable_lr: 4e-4
+schedule: (5,)
+gamma: 0.2
+first_training_epochs: 20
+training_epochs: 20
+evaluate_interval: 1
+info_per_epochs: 1
+early_stop: 100
+checkpoint_selection_metric: cumulative_macro
+
+### CL
+nb_class_fg: 8
+nb_class_pg: 2
+is_rescale_new_weight: True
+is_fix_trained_classifier: True
+is_unfix_O_classifier: False
+
+### Baseline model
+soft_param: 0.3
+regular_param: 0.1
+distill_logits_weight: 2
+
+### Semantic risk graph
+is_use_semantic_agent: True
+semantic_memory_path: semantic_memory/ontonotes5/entity_types.json
+semantic_distill_base_weight: 1.2
+semantic_risk_threshold: 0.5
+semantic_max_weight: 1.6
+is_use_risk_graph: True
+risk_graph_cache_dir: semantic_cache/ontonotes5_v2/risk_graph
+is_save_risk_graph_plot: True
+
+# Retain the LLM as the semantic prior, while teacher confusion remains the
+# strongest task-specific signal for this first cross-dataset evaluation.
+is_use_local_llm_agent: True
+local_llm_model_path: /root/autodl-tmp/models/Qwen2.5-1.5B-Instruct
+local_llm_max_new_tokens: 512
+local_llm_temperature: 0.0
+local_llm_torch_dtype: float32
+semantic_cache_dir: semantic_cache/ontonotes5_v2
+rule_risk_weight: 0.6
+llm_risk_weight: 0.2
+is_use_model_risk: True
+model_confusion_risk_scale: 2.0
+
+### Reflection and prototype memory
+is_use_reflection_memory: True
+reflection_cache_dir: semantic_cache/ontonotes5_v2/reflection
+reflection_risk_threshold: 0.5
+reflection_forgetting_threshold: 1.0
+reflection_update_weight: 0.3
+reflection_forgetting_weight: 0.6
+reflection_confusion_weight: 0.4
+reflection_forgetting_scale: 5.0
+is_use_old_class_vulnerability: True
+old_class_vulnerability_f1_floor: 80.0
+old_class_vulnerability_weight: 0.3
+is_use_prototype_anchor: True
+prototype_anchor_weight: 0.5
+prototype_memory_cache_dir: semantic_cache/ontonotes5_v2/prototype_memory
+
+### Risk-controlled pseudo labels and separation
+is_use_risk_aware_pseudo_label: True
+pseudo_label_min_confidence: 0.55
+pseudo_label_max_confidence: 0.80
+risk_pseudo_label_fallback_confidence: 0.45
+is_use_risk_contrastive: True
+risk_contrastive_weight: 0.1
+risk_contrastive_margin: 0.2
+
+### Optional local verifier
+is_use_llm_verifier: True
+llm_verifier_model_path: /root/autodl-tmp/models/Qwen2.5-1.5B-Instruct
+llm_verifier_cache_dir: semantic_cache/ontonotes5_v2/llm_verifier
+llm_verifier_max_new_tokens: 256
+llm_verifier_temperature: 0.0
+llm_verifier_torch_dtype: float32
+llm_verifier_max_checks_per_batch: 1
+llm_verifier_task_budget: 20
+llm_verifier_min_risk: 0.65
+
+### Analysis
+is_save_risk_analysis: True
