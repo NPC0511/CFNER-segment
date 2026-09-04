@@ -39,7 +39,90 @@ domain2entity={
 }
 
 def print_split_data_statistic(datapath, phase, entity_list, nb_class_fg, nb_class_pg, schema):
-    pass
+    label_list = get_default_label_list(entity_list, schema=schema)
+    root = datapath[0] if isinstance(datapath, list) else datapath
+    path = os.path.join(root, 'train_fg_%d_pg_%d.pth' % (nb_class_fg, nb_class_pg))
+    with open(path, 'rb') as handle:
+        _, y_dict = pickle.load(handle)
+    for split_name, labels in y_dict.items():
+        print('Data split %s:' % split_name)
+        print(sorted(get_label_distribution(labels, label_list, count=True).items()))
+
+
+def spilt_dataset_random(datapath, phase, entity_list, nb_class_fg, nb_class_pg, schema):
+    """Create the original random baseline split used by CPFD."""
+    label_list = get_default_label_list(entity_list, schema=schema)
+    all_x, all_y = read_ner(datapath, phase, label_list)
+    split_names, remaining = [], {}
+    entity_to_split = {}
+    index = 0
+    while index < len(entity_list):
+        end = index + (nb_class_fg if index == 0 else nb_class_pg) - 1
+        name = '%d_%d' % (index, end)
+        split_names.append(name)
+        remaining[name] = int(len(all_x) * (end - index + 1) / float(len(entity_list)))
+        for entity_index in range(index, end + 1):
+            entity_to_split[entity_index] = name
+        index = end + 1
+    inputs_dict = {name: [] for name in split_names}
+    labels_dict = {name: [] for name in split_names}
+    for inputs, labels in zip(all_x, all_y):
+        available = [name for name in split_names if remaining[name] > 0]
+        if not available:
+            break
+        name = np.random.choice(available)
+        inputs_dict[name].append(inputs)
+        labels_dict[name].append(labels)
+        remaining[name] -= 1
+    root = datapath[0] if isinstance(datapath, list) else datapath
+    path = os.path.join(root, 'train_fg_%d_pg_%d_random.pth' % (nb_class_fg, nb_class_pg))
+    with open(path, 'wb') as handle:
+        pickle.dump((inputs_dict, labels_dict), handle)
+
+
+def spilt_dataset(datapath, phase, entity_list, nb_class_fg, nb_class_pg, schema):
+    """Create a deterministic class-aware split compatible with CPFD files."""
+    label_list = get_default_label_list(entity_list, schema=schema)
+    all_x, all_y = read_ner(datapath, phase, label_list)
+    split_names, remaining, entity_to_split = [], {}, {}
+    index = 0
+    while index < len(entity_list):
+        size = nb_class_fg if index == 0 else nb_class_pg
+        end = index + size - 1
+        name = '%d_%d' % (index, end)
+        split_names.append(name)
+        remaining[name] = int(len(all_x) * size / float(len(entity_list)))
+        for entity_index in range(index, end + 1):
+            entity_to_split[entity_index] = name
+        index = end + 1
+    inputs_dict = {name: [] for name in split_names}
+    labels_dict = {name: [] for name in split_names}
+    label_counts = get_label_distribution(all_y, label_list, count=True)
+    for inputs, labels in zip(all_x, all_y):
+        entity_indices = sorted(set(
+            (label - 1) // (len(schema) - 1)
+            for label in set(labels) if label not in (0, -100)
+        ), key=lambda item: label_counts[entity_list[item]])
+        assigned = False
+        for entity_index in entity_indices:
+            name = entity_to_split[entity_index]
+            if remaining[name] > 0:
+                inputs_dict[name].append(inputs)
+                labels_dict[name].append(labels)
+                remaining[name] -= 1
+                assigned = True
+                break
+        if not assigned:
+            available = [name for name in split_names if remaining[name] > 0]
+            if available:
+                name = np.random.choice(available)
+                inputs_dict[name].append(inputs)
+                labels_dict[name].append(labels)
+                remaining[name] -= 1
+    root = datapath[0] if isinstance(datapath, list) else datapath
+    path = os.path.join(root, 'train_fg_%d_pg_%d.pth' % (nb_class_fg, nb_class_pg))
+    with open(path, 'wb') as handle:
+        pickle.dump((inputs_dict, labels_dict), handle)
 
 
 
