@@ -45,6 +45,8 @@ def get_params():
     parser.add_argument("--ckpt", type=str, default=None, help="the pretrained lauguage model")
     parser.add_argument("--dropout", type=float, default=0, help="dropout rate")
     parser.add_argument("--hidden_dim", type=int, default=768, help="Hidden layer dimension")
+    parser.add_argument("--classifier_type", type=str, choices=["cosine", "linear"], default="cosine",
+                        help="Classifier used by the incremental NER model")
     parser.add_argument("--alpha", type=float, default=0, help="Trade-off parameter")
     parser.add_argument("--none_idx", type=int, default=103, help="None token index(103=[mask])")
 

@@ -5,6 +5,7 @@ is_load_ckpt_if_exists: False
 is_load_common_first_model: False
 dropout: 0
 hidden_dim: 768
+classifier_type: linear
 
 ### Data
 data_path: [datasets/NER_data/ontonotes5]

@@ -28,7 +28,10 @@ class BertTagger(nn.Module):
             encoder_ckpt = torch.load(params.ckpt)
             self.encoder.load_state_dict(encoder_ckpt)
         # 分类器
-        self.classifier = CosineLinear(self.hidden_dim, self.output_dim)
+        if getattr(params, "classifier_type", "cosine") == "linear":
+            self.classifier = LinearClassifier(self.hidden_dim, self.output_dim)
+        else:
+            self.classifier = CosineLinear(self.hidden_dim, self.output_dim)
 
 
     def forward(self, X, return_feat=False):
@@ -96,6 +99,28 @@ class CosineLinear(nn.Module):
 
         return out
 
+
+class LinearClassifier(nn.Module):
+    """Standard token classifier with the same public fields as CosineLinear."""
+
+    def __init__(self, hidden_dim, output_dim, bias=True):
+        super(LinearClassifier, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.output_dim = output_dim
+        self.weight = Parameter(torch.Tensor(output_dim, hidden_dim))
+        self.bias = Parameter(torch.zeros(output_dim)) if bias else None
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+        if self.bias is not None:
+            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
+            bound = 1 / math.sqrt(fan_in)
+            nn.init.uniform_(self.bias, -bound, bound)
+
+    def forward(self, input, num_head=1):
+        return F.linear(input, self.weight, self.bias)
+
 class SplitCosineLinear(nn.Module):
     #consists of two fc layers and concatenate their outputs
     def __init__(self, hidden_dim, old_output_dim, new_output_dim, sigma=True):
@@ -121,4 +146,23 @@ class SplitCosineLinear(nn.Module):
         if self.sigma is not None:
             out = self.sigma * out
         return out
+
+
+class SplitLinear(nn.Module):
+    """Incremental counterpart of LinearClassifier with RDP-compatible fields."""
+
+    def __init__(self, hidden_dim, old_output_dim, new_output_dim):
+        super(SplitLinear, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.output_dim = old_output_dim + new_output_dim
+        self.fc0 = LinearClassifier(hidden_dim, 1)
+        self.fc1 = LinearClassifier(hidden_dim, old_output_dim - 1)
+        self.fc2 = LinearClassifier(hidden_dim, new_output_dim)
+
+    def forward(self, x, num_head=1):
+        return torch.cat((
+            self.fc0(x, num_head=num_head),
+            self.fc1(x, num_head=num_head),
+            self.fc2(x, num_head=num_head)
+        ), dim=-1)
 

@@ -186,11 +186,18 @@ def main_cl(params):
                                         hidden_dim,
                                         output_dim,
                                         class_per_entity*params.nb_class_pg))
-            new_fc = SplitCosineLinear(hidden_dim, output_dim, class_per_entity*params.nb_class_pg)
-
-            new_fc.fc0.weight.data = trainer.model.classifier.weight.data[:1] # for O class
-            new_fc.fc1.weight.data = trainer.model.classifier.weight.data[1:] # for old class
-            new_fc.sigma.data = trainer.model.classifier.sigma.data
+            if getattr(params, "classifier_type", "cosine") == "linear":
+                new_fc = SplitLinear(hidden_dim, output_dim, class_per_entity*params.nb_class_pg)
+                new_fc.fc0.weight.data = trainer.model.classifier.weight.data[:1]
+                new_fc.fc1.weight.data = trainer.model.classifier.weight.data[1:]
+                if trainer.model.classifier.bias is not None:
+                    new_fc.fc0.bias.data = trainer.model.classifier.bias.data[:1]
+                    new_fc.fc1.bias.data = trainer.model.classifier.bias.data[1:]
+            else:
+                new_fc = SplitCosineLinear(hidden_dim, output_dim, class_per_entity*params.nb_class_pg)
+                new_fc.fc0.weight.data = trainer.model.classifier.weight.data[:1] # for O class
+                new_fc.fc1.weight.data = trainer.model.classifier.weight.data[1:] # for old class
+                new_fc.sigma.data = trainer.model.classifier.sigma.data
 
             trainer.model.classifier = new_fc
             trainer.model.cuda()
@@ -206,12 +213,20 @@ def main_cl(params):
                                                             hidden_dim,
                                                             1+output_dim1+output_dim2,
                                                             class_per_entity*params.nb_class_pg))                                                
-            new_fc = SplitCosineLinear(hidden_dim, 1+output_dim1+output_dim2, class_per_entity*params.nb_class_pg)
-
-            new_fc.fc0.weight.data = trainer.model.classifier.fc0.weight.data # for O classes
-            new_fc.fc1.weight.data[:output_dim1] = trainer.model.classifier.fc1.weight.data
-            new_fc.fc1.weight.data[output_dim1:] = trainer.model.classifier.fc2.weight.data
-            new_fc.sigma.data = trainer.model.classifier.sigma.data
+            if getattr(params, "classifier_type", "cosine") == "linear":
+                new_fc = SplitLinear(hidden_dim, 1+output_dim1+output_dim2, class_per_entity*params.nb_class_pg)
+                new_fc.fc0.weight.data = trainer.model.classifier.fc0.weight.data
+                new_fc.fc1.weight.data[:output_dim1] = trainer.model.classifier.fc1.weight.data
+                new_fc.fc1.weight.data[output_dim1:] = trainer.model.classifier.fc2.weight.data
+                new_fc.fc0.bias.data = trainer.model.classifier.fc0.bias.data
+                new_fc.fc1.bias.data[:output_dim1] = trainer.model.classifier.fc1.bias.data
+                new_fc.fc1.bias.data[output_dim1:] = trainer.model.classifier.fc2.bias.data
+            else:
+                new_fc = SplitCosineLinear(hidden_dim, 1+output_dim1+output_dim2, class_per_entity*params.nb_class_pg)
+                new_fc.fc0.weight.data = trainer.model.classifier.fc0.weight.data # for O classes
+                new_fc.fc1.weight.data[:output_dim1] = trainer.model.classifier.fc1.weight.data
+                new_fc.fc1.weight.data[output_dim1:] = trainer.model.classifier.fc2.weight.data
+                new_fc.sigma.data = trainer.model.classifier.sigma.data
 
             trainer.model.classifier = new_fc
             trainer.model.cuda()
