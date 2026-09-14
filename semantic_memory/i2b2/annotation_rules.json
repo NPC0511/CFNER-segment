@@ -1,0 +1,34 @@
+{
+  "datasets": {
+    "i2b2": {
+      "rules": {
+        "AGE": ["Use AGE for a patient's age, not a dosage or duration."],
+        "CITY": ["Use CITY for a city name in an address or location."],
+        "COUNTRY": ["Use COUNTRY for a country, not a city or state."],
+        "DATE": ["Use DATE for calendar dates and date ranges, not standalone numbers."],
+        "DOCTOR": ["Use DOCTOR for a physician mention; preserve titles when annotated."],
+        "HOSPITAL": ["Use HOSPITAL for a facility name, not the city where it is located."],
+        "IDNUM": ["Use IDNUM for administrative identification numbers."],
+        "MEDICALRECORD": ["Use MEDICALRECORD for record or chart identifiers, distinct from patient IDs."],
+        "ORGANIZATION": ["Use ORGANIZATION for named institutions, insurers, and agencies."],
+        "PATIENT": ["Use PATIENT for the patient identity or patient mention, not a clinician."],
+        "PHONE": ["Use PHONE for telephone-like contact numbers, not IDs or dates."],
+        "PROFESSION": ["Use PROFESSION for an occupation, not a person's name or title."],
+        "STATE": ["Use STATE for a state or first-level region, not a city."],
+        "STREET": ["Use STREET for street names and street-address components."],
+        "USERNAME": ["Use USERNAME for account handles, not a person's real name."],
+        "ZIP": ["Use ZIP for postal codes, not phone numbers or identification numbers."]
+      },
+      "confusion_rules": [
+        {"id": "i2b2_city_state_001", "source_type": "CITY", "target_type": "STATE", "weight": 1.5, "reason": "Clinical addresses contain city and state names with similar surface contexts."},
+        {"id": "i2b2_hospital_org_001", "source_type": "HOSPITAL", "target_type": "ORGANIZATION", "weight": 1.7, "reason": "Hospitals are organizations, but the corpus distinguishes facility names from broader organizations."},
+        {"id": "i2b2_doctor_patient_001", "source_type": "DOCTOR", "target_type": "PATIENT", "weight": 1.5, "reason": "Personal names in clinical notes can refer to either clinicians or patients."},
+        {"id": "i2b2_idnum_record_001", "source_type": "IDNUM", "target_type": "MEDICALRECORD", "weight": 1.7, "reason": "Administrative identifiers and medical-record numbers share numeric formats."},
+        {"id": "i2b2_phone_id_001", "source_type": "PHONE", "target_type": "IDNUM", "weight": 1.5, "reason": "Long numeric strings can be phone numbers or identifiers without formatting context."},
+        {"id": "i2b2_zip_id_001", "source_type": "ZIP", "target_type": "IDNUM", "weight": 1.3, "reason": "Postal codes are numeric strings that can resemble administrative IDs."},
+        {"id": "i2b2_profession_doctor_001", "source_type": "PROFESSION", "target_type": "DOCTOR", "weight": 1.3, "reason": "A clinical role can be expressed as an occupation or as a doctor mention."},
+        {"id": "i2b2_date_age_001", "source_type": "DATE", "target_type": "AGE", "weight": 1.1, "reason": "Numeric expressions require context to distinguish dates from patient ages."}
+      ]
+    }
+  }
+}

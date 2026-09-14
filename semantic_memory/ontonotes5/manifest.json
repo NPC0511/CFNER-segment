@@ -1,14 +1,15 @@
 {
   "dataset": "ontonotes5",
-  "version": "v1",
-  "created_at_utc": "2026-07-24T00:00:00+00:00",
-  "memory_kind": "human_authored_dataset_seed_memory",
+  "version": "v2",
+  "created_at_utc": "2026-09-08T00:00:00+00:00",
+  "memory_kind": "human_authored_conservative_revision",
   "review_status": "draft_requires_dataset_review",
   "training_memory_source": "human_backbone",
   "training_memory_path": "semantic_memory/ontonotes5/entity_types.json",
+  "revision_notes": "Conservative directional confusion rules and context-explicit boundary examples; requires review against the exact OntoNotes5 annotation release.",
   "artifacts": {
-    "entity_types.json": "a797357ec37ee8adaee4296ff4296b83c5dc59e6997edb7b145137e51779f97",
-    "annotation_rules.json": "599bb4f3e7c0081ef368eccf132b8f632da7c8f28e9eac2c777e925e831f5509",
-    "examples.jsonl": "ce9877dffa534b541706967c0122349a1a87463633e15cbb64dcfce1fd8cebe5"
+    "entity_types.json": "b828d234a33c662c7721c3847fa231e82540fa3eb8a8e7907985ff0cb376f3bf",
+    "annotation_rules.json": "743d8a84b7629628c5773d429ebf3b4b00e2e750235412f9b1ba7f85f1775607",
+    "examples.jsonl": "5339fdfbe8dc1bd23dc4735fee4f0fc52ab6e1e3752a48fabed7347082ae7d5a"
   }
 }

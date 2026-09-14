@@ -1,0 +1,9 @@
+{
+  "dataset": "i2b2",
+  "version": "v1",
+  "memory_kind": "human_authored_dataset_seed_memory",
+  "review_status": "draft_requires_dataset_review",
+  "training_memory_source": "human_backbone",
+  "training_memory_path": "semantic_memory/i2b2/entity_types.json",
+  "notes": "Initial clinical seed memory; confusion rules should be reviewed against the exact i2b2 annotation release."
+}

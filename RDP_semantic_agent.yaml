@@ -2,7 +2,7 @@
 seed: 1314
 # Keep OntoNotes runs independent from any existing checkpoints.
 is_load_ckpt_if_exists: False
-is_load_common_first_model: False
+is_load_common_first_model: True
 dropout: 0
 hidden_dim: 768
 
@@ -27,8 +27,8 @@ early_stop: 100
 checkpoint_selection_metric: cumulative_macro
 
 ### CL
-nb_class_fg: 8
-nb_class_pg: 2
+nb_class_fg: 12
+nb_class_pg: 1
 is_rescale_new_weight: True
 is_fix_trained_classifier: True
 is_unfix_O_classifier: False
@@ -45,7 +45,7 @@ semantic_distill_base_weight: 1.2
 semantic_risk_threshold: 0.5
 semantic_max_weight: 1.6
 is_use_risk_graph: True
-risk_graph_cache_dir: semantic_cache/ontonotes5_v3_rules/risk_graph
+risk_graph_cache_dir: semantic_cache/ontonotes5_v2/risk_graph
 is_save_risk_graph_plot: True
 
 # Retain the LLM as the semantic prior, while teacher confusion remains the
@@ -55,7 +55,7 @@ local_llm_model_path: /root/autodl-tmp/models/Qwen2.5-1.5B-Instruct
 local_llm_max_new_tokens: 512
 local_llm_temperature: 0.0
 local_llm_torch_dtype: float32
-semantic_cache_dir: semantic_cache/ontonotes5_v3_rules
+semantic_cache_dir: semantic_cache/ontonotes5_v2
 rule_risk_weight: 0.6
 llm_risk_weight: 0.2
 is_use_model_risk: True
@@ -63,7 +63,7 @@ model_confusion_risk_scale: 2.0
 
 ### Reflection and prototype memory
 is_use_reflection_memory: True
-reflection_cache_dir: semantic_cache/ontonotes5_v3_rules/reflection
+reflection_cache_dir: semantic_cache/ontonotes5_v2/reflection
 reflection_risk_threshold: 0.5
 reflection_forgetting_threshold: 1.0
 reflection_update_weight: 0.3
@@ -75,7 +75,7 @@ old_class_vulnerability_f1_floor: 80.0
 old_class_vulnerability_weight: 0.3
 is_use_prototype_anchor: True
 prototype_anchor_weight: 0.5
-prototype_memory_cache_dir: semantic_cache/ontonotes5_v3_rules/prototype_memory
+prototype_memory_cache_dir: semantic_cache/ontonotes5_v2/prototype_memory
 
 ### Risk-controlled pseudo labels and separation
 is_use_risk_aware_pseudo_label: True
@@ -89,7 +89,7 @@ risk_contrastive_margin: 0.2
 ### Optional local verifier
 is_use_llm_verifier: True
 llm_verifier_model_path: /root/autodl-tmp/models/Qwen2.5-1.5B-Instruct
-llm_verifier_cache_dir: semantic_cache/ontonotes5_v3_rules/llm_verifier
+llm_verifier_cache_dir: semantic_cache/ontonotes5_v2/llm_verifier
 llm_verifier_max_new_tokens: 256
 llm_verifier_temperature: 0.0
 llm_verifier_torch_dtype: float32

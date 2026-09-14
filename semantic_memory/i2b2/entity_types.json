@@ -1,0 +1,24 @@
+{
+  "datasets": {
+    "i2b2": {
+      "entity_types": {
+        "AGE": {"definition": "Patient age or age-related expression.", "positive_examples": ["45-year-old", "age 67"], "negative_examples": ["45 mg", "room 45"]},
+        "CITY": {"definition": "Name of a city or town in a clinical address or location.", "positive_examples": ["Boston", "New York"], "negative_examples": ["Massachusetts", "Main Street"]},
+        "COUNTRY": {"definition": "Name of a country.", "positive_examples": ["United States", "Canada"], "negative_examples": ["Boston", "California"]},
+        "DATE": {"definition": "Calendar date or date range associated with a clinical event.", "positive_examples": ["03/14/2006", "January 2005"], "negative_examples": ["10 mg", "room 12"]},
+        "DOCTOR": {"definition": "Name or identifying mention of a physician or doctor.", "positive_examples": ["Dr. Smith", "John Doe, MD"], "negative_examples": ["the patient", "Cardiology"]},
+        "HOSPITAL": {"definition": "Name of a hospital or clinical care facility.", "positive_examples": ["Mass General Hospital", "St. Mary's"], "negative_examples": ["Boston", "Cardiology"]},
+        "IDNUM": {"definition": "Administrative or personal identification number.", "positive_examples": ["ID 123456", "MRN: 00981"], "negative_examples": ["45 mg", "room 123"]},
+        "MEDICALRECORD": {"definition": "Medical record, chart, or encounter record identifier.", "positive_examples": ["medical record 4832", "chart number 91"], "negative_examples": ["patient 91", "ICD-9 code"]},
+        "ORGANIZATION": {"definition": "Name of a healthcare, insurance, government, or other organization.", "positive_examples": ["Blue Cross", "Department of Health"], "negative_examples": ["Boston", "Dr. Smith"]},
+        "PATIENT": {"definition": "Name or identifying mention of the patient.", "positive_examples": ["Jane Doe", "the patient"], "negative_examples": ["Dr. Doe", "Blue Cross"]},
+        "PHONE": {"definition": "Telephone, fax, or contact number used as a phone expression.", "positive_examples": ["617-555-0199", "(800) 555-1212"], "negative_examples": ["ID 5551212", "03/14/2006"]},
+        "PROFESSION": {"definition": "A person's occupation or professional role.", "positive_examples": ["nurse", "radiologist"], "negative_examples": ["Dr. Smith", "Boston"]},
+        "STATE": {"definition": "Name or abbreviation of a US state or equivalent first-level region.", "positive_examples": ["Massachusetts", "MA"], "negative_examples": ["Boston", "United States"]},
+        "STREET": {"definition": "Street name or street-address component.", "positive_examples": ["Main Street", "123 Oak Ave"], "negative_examples": ["Boston", "MA"]},
+        "USERNAME": {"definition": "User or account name used to identify a person in a system.", "positive_examples": ["jdoe", "smith_j"], "negative_examples": ["John Doe", "MRN 123"]},
+        "ZIP": {"definition": "Postal or ZIP code in an address.", "positive_examples": ["02115", "90210-1234"], "negative_examples": ["617-555-0199", "ID 02115"]}
+      }
+    }
+  }
+}

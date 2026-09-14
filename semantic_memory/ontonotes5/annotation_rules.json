@@ -21,7 +21,31 @@
         "TIME": ["Use TIME for clock times and within-day temporal expressions, not calendar dates."],
         "WORK_OF_ART": ["Use WORK_OF_ART for the title of a creative work, not a generic description of the work."]
       },
-      "confusion_rules": []
+      "confusion_rules": [
+        {"id": "ontonotes_gpe_loc_001", "source_type": "GPE", "target_type": "LOC", "weight": 1.7, "reason": "Political places such as cities and countries must be separated from natural or non-political locations."},
+        {"id": "ontonotes_loc_gpe_001", "source_type": "LOC", "target_type": "GPE", "weight": 1.7, "reason": "Natural features and regions can be confused with cities, countries, or other governing geographic entities."},
+        {"id": "ontonotes_gpe_org_001", "source_type": "GPE", "target_type": "ORG", "weight": 1.7, "reason": "A place name can denote a political entity in one context and a team, institution, or organization in another."},
+        {"id": "ontonotes_org_gpe_001", "source_type": "ORG", "target_type": "GPE", "weight": 1.7, "reason": "Organization and team names may be identical to city or country names, requiring context to resolve the type."},
+        {"id": "ontonotes_fac_gpe_001", "source_type": "FAC", "target_type": "GPE", "weight": 1.5, "reason": "Facilities such as airports and bridges are human-made places, while nearby cities and states are GPEs."},
+        {"id": "ontonotes_org_person_001", "source_type": "ORG", "target_type": "PERSON", "weight": 1.5, "reason": "News and sports contexts place organization and person names together, and short names can be ambiguous without context."},
+        {"id": "ontonotes_person_org_001", "source_type": "PERSON", "target_type": "ORG", "weight": 1.5, "reason": "A name-shaped span can refer to an individual or an organization/team depending on the surrounding predicate and context."},
+        {"id": "ontonotes_date_time_001", "source_type": "DATE", "target_type": "TIME", "weight": 1.7, "reason": "Calendar dates and within-day expressions are both temporal but have different OntoNotes labels."},
+        {"id": "ontonotes_time_date_001", "source_type": "TIME", "target_type": "DATE", "weight": 1.7, "reason": "Clock times and short within-day expressions must be separated from calendar dates and date ranges."},
+        {"id": "ontonotes_cardinal_ordinal_001", "source_type": "CARDINAL", "target_type": "ORDINAL", "weight": 1.1, "reason": "Bare numbers and ranked positions share numeric surface forms but differ by whether they express order."},
+        {"id": "ontonotes_ordinal_cardinal_001", "source_type": "ORDINAL", "target_type": "CARDINAL", "weight": 1.1, "reason": "Ordinal expressions can be confused with cardinal numbers when rank or order is not explicit."},
+        {"id": "ontonotes_money_quantity_001", "source_type": "MONEY", "target_type": "QUANTITY", "weight": 1.5, "reason": "Amounts with units can be monetary or measured quantities; currency context determines the label."},
+        {"id": "ontonotes_quantity_money_001", "source_type": "QUANTITY", "target_type": "MONEY", "weight": 1.5, "reason": "Measured amounts and monetary values share numeric forms but are separated by their units and currency context."},
+        {"id": "ontonotes_money_percent_001", "source_type": "MONEY", "target_type": "PERCENT", "weight": 1.1, "reason": "Numeric expressions can be confused when currency symbols, percent signs, or monetary words are omitted or distant."},
+        {"id": "ontonotes_percent_money_001", "source_type": "PERCENT", "target_type": "MONEY", "weight": 1.1, "reason": "Percentages and monetary amounts are both numeric expressions and require explicit unit context."},
+        {"id": "ontonotes_norp_gpe_001", "source_type": "NORP", "target_type": "GPE", "weight": 1.5, "reason": "Nationalities and political groups can be expressed with words related to countries and cities, but the group versus place distinction is annotation-critical."},
+        {"id": "ontonotes_gpe_norp_001", "source_type": "GPE", "target_type": "NORP", "weight": 1.5, "reason": "A country or city name must be separated from a nationality, religious group, or political group mention."},
+        {"id": "ontonotes_norp_language_001", "source_type": "NORP", "target_type": "LANGUAGE", "weight": 1.1, "reason": "Words such as Chinese can denote a nationality or group, or a language, depending on the surrounding predicate."},
+        {"id": "ontonotes_language_norp_001", "source_type": "LANGUAGE", "target_type": "NORP", "weight": 1.1, "reason": "Language names and nationality or group names can share surface forms and require contextual disambiguation."},
+        {"id": "ontonotes_event_work_001", "source_type": "EVENT", "target_type": "WORK_OF_ART", "weight": 1.1, "reason": "Named events and titles of creative works can both be multiword proper-name expressions."},
+        {"id": "ontonotes_work_event_001", "source_type": "WORK_OF_ART", "target_type": "EVENT", "weight": 1.1, "reason": "A title or named event requires contextual predicates to distinguish a creative work from an occurrence or competition."},
+        {"id": "ontonotes_org_product_001", "source_type": "ORG", "target_type": "PRODUCT", "weight": 1.1, "reason": "Brand and product names can occur together, and a commercial name may denote the manufacturer or the marketed item."},
+        {"id": "ontonotes_product_org_001", "source_type": "PRODUCT", "target_type": "ORG", "weight": 1.1, "reason": "A named commercial item must be separated from the company or organization that makes it."}
+      ]
     }
   }
 }

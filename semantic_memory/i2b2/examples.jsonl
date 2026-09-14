@@ -1,0 +1,8 @@
+{"dataset":"i2b2","entity_type":"AGE","text":"45-year-old","span":"45-year-old","label":"AGE","example_type":"positive"}
+{"dataset":"i2b2","entity_type":"CITY","text":"The patient lives in Boston.","span":"Boston","label":"CITY","example_type":"positive"}
+{"dataset":"i2b2","entity_type":"DATE","text":"Admitted on 03/14/2006.","span":"03/14/2006","label":"DATE","example_type":"positive"}
+{"dataset":"i2b2","entity_type":"DOCTOR","text":"Dr. Smith reviewed the chart.","span":"Dr. Smith","label":"DOCTOR","example_type":"positive"}
+{"dataset":"i2b2","entity_type":"HOSPITAL","text":"Transferred to Mass General Hospital.","span":"Mass General Hospital","label":"HOSPITAL","example_type":"positive"}
+{"dataset":"i2b2","entity_type":"PHONE","text":"Call 617-555-0199.","span":"617-555-0199","label":"PHONE","example_type":"positive"}
+{"dataset":"i2b2","entity_type":"STATE","text":"The clinic is in Massachusetts.","span":"Massachusetts","label":"STATE","example_type":"positive"}
+{"dataset":"i2b2","entity_type":"ZIP","text":"The ZIP code is 02115.","span":"02115","label":"ZIP","example_type":"positive"}
