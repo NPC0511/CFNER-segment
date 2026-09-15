@@ -105,6 +105,18 @@ class BaseTrainer(object):
                 if index != 0 and label_name != "O":
                     weights[index] = raw.get(label_name.split("-", 1)[-1], 1.0) / max(mean, 1e-8)
         weights[0] = max(float(getattr(self.params, "class_balanced_o_weight", 0.2)), 0.0)
+        output_dim = int(self.model.classifier.output_dim)
+        if weights.numel() > output_dim:
+            logger.info(
+                "Truncating class-balanced weights from %d to current output_dim=%d",
+                weights.numel(), output_dim
+            )
+            weights = weights[:output_dim]
+        elif weights.numel() < output_dim:
+            raise ValueError(
+                "Class-balanced weights have %d entries but classifier requires %d"
+                % (weights.numel(), output_dim)
+            )
         self.class_weights = weights.cuda()
         logger.info("First-task class-balanced counts = %s", counts.tolist())
         logger.info("First-task class-balanced weights = %s", self.class_weights.detach().cpu().tolist())
@@ -330,10 +342,6 @@ class BaseTrainer(object):
         if ce_weight is not None:
             output_dim = self.logits.shape[-1]
             if ce_weight.numel() != output_dim:
-                logger.info(
-                    "Truncating class-balanced weights from %d to current output_dim=%d",
-                    ce_weight.numel(), output_dim
-                )
                 ce_weight = ce_weight[:output_dim]
         ce_loss = nn.CrossEntropyLoss(weight=ce_weight)(self.logits.view(-1, self.logits.shape[-1]),
                                 labels.flatten().long()) # bs*seq_len, out_dim 默认自动忽略-100 label （pad、cls、sep、第二子词对应的索引）
