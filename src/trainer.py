@@ -326,7 +326,15 @@ class BaseTrainer(object):
         assert self.logits!=None, "logits is none!"
 
         # classification loss
-        ce_weight = self.class_weights if self.class_weights is not None else None
+        ce_weight = self.class_weights
+        if ce_weight is not None:
+            output_dim = self.logits.shape[-1]
+            if ce_weight.numel() != output_dim:
+                logger.info(
+                    "Truncating class-balanced weights from %d to current output_dim=%d",
+                    ce_weight.numel(), output_dim
+                )
+                ce_weight = ce_weight[:output_dim]
         ce_loss = nn.CrossEntropyLoss(weight=ce_weight)(self.logits.view(-1, self.logits.shape[-1]),
                                 labels.flatten().long()) # bs*seq_len, out_dim 默认自动忽略-100 label （pad、cls、sep、第二子词对应的索引）
         self.loss = ce_loss
