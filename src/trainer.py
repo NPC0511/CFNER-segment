@@ -69,6 +69,46 @@ class BaseTrainer(object):
         self.lr = float(params.lr)
         self.mu = 0.9
         self.weight_decay = 5e-4
+        self.class_weights = None
+
+    def build_first_task_class_weights(self, train_loader):
+        """Build smoothed weights from labels used by the first task."""
+        if not getattr(self.params, "is_use_class_balanced_loss", False):
+            self.class_weights = None
+            return None
+        counts = torch.zeros(len(self.label_list), dtype=torch.float64)
+        for _, labels in train_loader:
+            labels = labels.view(-1).long()
+            labels = labels[labels != pad_token_label_id]
+            if labels.numel() > 0:
+                counts += torch.bincount(labels.cpu(), minlength=len(self.label_list)).double()
+        entity_counts = {}
+        for index, label_name in enumerate(self.label_list):
+            if index == 0 or label_name == "O":
+                continue
+            entity_type = label_name.split("-", 1)[-1]
+            entity_counts[entity_type] = entity_counts.get(entity_type, 0.0) + float(counts[index])
+        nonzero = [value for value in entity_counts.values() if value > 0]
+        weights = torch.ones(len(self.label_list), dtype=torch.float32)
+        if nonzero:
+            reference = float(np.median(nonzero))
+            power = max(float(getattr(self.params, "class_balanced_power", 0.5)), 0.0)
+            low = max(float(getattr(self.params, "class_balanced_min_weight", 0.5)), 0.0)
+            high = max(float(getattr(self.params, "class_balanced_max_weight", 4.0)), low)
+            raw = {
+                entity_type: min(max((reference / value) ** power, low), high)
+                for entity_type, value in entity_counts.items()
+                if value > 0
+            }
+            mean = float(np.mean(list(raw.values()))) if raw else 1.0
+            for index, label_name in enumerate(self.label_list):
+                if index != 0 and label_name != "O":
+                    weights[index] = raw.get(label_name.split("-", 1)[-1], 1.0) / max(mean, 1e-8)
+        weights[0] = max(float(getattr(self.params, "class_balanced_o_weight", 0.2)), 0.0)
+        self.class_weights = weights.cuda()
+        logger.info("First-task class-balanced counts = %s", counts.tolist())
+        logger.info("First-task class-balanced weights = %s", self.class_weights.detach().cpu().tolist())
+        return self.class_weights
 
     def begin_task(self, task_id):
         """Reset per-task verifier accounting when a new incremental task starts."""
@@ -286,7 +326,8 @@ class BaseTrainer(object):
         assert self.logits!=None, "logits is none!"
 
         # classification loss
-        ce_loss = nn.CrossEntropyLoss()(self.logits.view(-1, self.logits.shape[-1]), 
+        ce_weight = self.class_weights if self.class_weights is not None else None
+        ce_loss = nn.CrossEntropyLoss(weight=ce_weight)(self.logits.view(-1, self.logits.shape[-1]),
                                 labels.flatten().long()) # bs*seq_len, out_dim 默认自动忽略-100 label （pad、cls、sep、第二子词对应的索引）
         self.loss = ce_loss
         return ce_loss.item() 
